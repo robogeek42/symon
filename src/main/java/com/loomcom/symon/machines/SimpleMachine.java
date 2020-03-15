@@ -30,6 +30,8 @@ import com.loomcom.symon.devices.Acia;
 import com.loomcom.symon.devices.Crtc;
 import com.loomcom.symon.devices.Memory;
 import com.loomcom.symon.devices.Pia;
+import com.loomcom.symon.devices.Vdp;
+import com.loomcom.symon.devices.Via6522Keyboard;
 import com.loomcom.symon.exceptions.MemoryRangeException;
 
 /**
@@ -91,6 +93,11 @@ public class SimpleMachine implements Machine {
     }
 
     @Override
+    public Vdp getVdp() {
+        return null;
+    }
+
+    @Override
     public void setRom(Memory rom) throws MemoryRangeException {
         // No-op
     }
@@ -113,5 +120,11 @@ public class SimpleMachine implements Machine {
     @Override
     public String getName() {
         return "Simple";
+    }
+
+    @Override
+    public Via6522Keyboard getKeyboardVia()
+    {
+        return null;
     }
 }

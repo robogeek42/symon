@@ -58,7 +58,7 @@ public class Cpu implements InstructionTable {
     public static final int IRQ_VECTOR_L = 0xfffe;
     public static final int IRQ_VECTOR_H = 0xffff;
 
-    public static final long DEFAULT_CLOCK_PERIOD_IN_NS = 1000;
+    public static final long DEFAULT_CLOCK_PERIOD_IN_NS = 371;
 
     /* Simulated clock speed (default is 1MHz) */
     private long clockPeriodInNs = DEFAULT_CLOCK_PERIOD_IN_NS;
@@ -79,7 +79,8 @@ public class Cpu implements InstructionTable {
      * Construct a new CPU.
      */
     public Cpu() {
-        this(CpuBehavior.NMOS_6502);
+        //this(CpuBehavior.NMOS_6502);
+        this(CpuBehavior.CMOS_6502);
     }
 
     public Cpu(CpuBehavior behavior) {

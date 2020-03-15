@@ -49,6 +49,8 @@ public class BreakpointsWindow extends JFrame {
     private JFrame mainWindow;
     private Breakpoints breakpoints;
 
+    private static final Font BP_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+
     public BreakpointsWindow(Breakpoints breakpoints,
                              JFrame mainWindow) {
         this.breakpoints = breakpoints;
@@ -66,10 +68,13 @@ public class BreakpointsWindow extends JFrame {
         breakpointsPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         final JButton addButton = new JButton("Add");
+        addButton.setFont(BP_FONT);
         final JButton removeButton = new JButton("Del");
+        removeButton.setFont(BP_FONT);
         removeButton.setEnabled(false);
 
         final JTextField addTextField = new JTextField(4);
+        addTextField.setFont(BP_FONT);
 
         final JTable breakpointsTable = new JTable(breakpoints);
         breakpointsTable.setShowGrid(true);
@@ -85,6 +90,7 @@ public class BreakpointsWindow extends JFrame {
                 }
             }
         });
+        breakpointsTable.setFont(BP_FONT);
 
         JScrollPane scrollPane = new JScrollPane(breakpointsTable);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);

@@ -30,6 +30,8 @@ import com.loomcom.symon.devices.Acia;
 import com.loomcom.symon.devices.Crtc;
 import com.loomcom.symon.devices.Memory;
 import com.loomcom.symon.devices.Pia;
+import com.loomcom.symon.devices.Vdp;
+import com.loomcom.symon.devices.Via6522Keyboard;
 import com.loomcom.symon.exceptions.MemoryRangeException;
 
 
@@ -48,6 +50,8 @@ public interface Machine {
     Crtc getCrtc();
     
     Memory getRom();
+
+    Vdp getVdp();
     
     void setRom(Memory rom) throws MemoryRangeException;
     
@@ -58,4 +62,6 @@ public interface Machine {
     int getMemorySize();
 
     String getName();
+
+    Via6522Keyboard getKeyboardVia();
 }

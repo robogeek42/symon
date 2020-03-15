@@ -39,8 +39,8 @@ public class TraceLog extends JFrame {
     private final FifoRingBuffer<CpuState> traceLog;
     private final JTextArea                    traceLogTextArea;
 
-    private static final Dimension MIN_SIZE       = new Dimension(320, 200);
-    private static final Dimension PREFERRED_SIZE = new Dimension(640, 480);
+    private static final Dimension MIN_SIZE       = new Dimension(356, 240);
+    private static final Dimension PREFERRED_SIZE = new Dimension(720, 940);
     private static final int       MAX_LOG_LENGTH = 50000;
 
     public TraceLog() {
@@ -53,7 +53,7 @@ public class TraceLog extends JFrame {
         setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
         traceLogTextArea = new JTextArea();
-        traceLogTextArea.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12));
+        traceLogTextArea.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
         traceLogTextArea.setEditable(false);
 
         JScrollPane scrollableView = new JScrollPane(traceLogTextArea);

@@ -26,78 +26,90 @@ package com.loomcom.symon.machines;
 
 import com.loomcom.symon.Bus;
 import com.loomcom.symon.Cpu;
-import com.loomcom.symon.devices.Acia;
-import com.loomcom.symon.devices.Acia6850;
-import com.loomcom.symon.devices.Crtc;
-import com.loomcom.symon.devices.Memory;
-import com.loomcom.symon.devices.Pia;
-import com.loomcom.symon.devices.SdController;
-import com.loomcom.symon.devices.Vdp;
-import com.loomcom.symon.devices.Via6522Keyboard;
+import com.loomcom.symon.devices.*;
 import com.loomcom.symon.exceptions.MemoryRangeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
-import java.util.logging.Logger;
 
-
-public class MulticompMachine implements Machine {
+public class HomebrewMachine implements Machine {
     
-    private final static Logger logger = Logger.getLogger(MulticompMachine.class.getName());
+    private final static Logger logger = LoggerFactory.getLogger(HomebrewMachine.class.getName());
     
     // Constants used by the simulated system. These define the memory map.
     private static final int BUS_BOTTOM = 0x0000;
     private static final int BUS_TOP    = 0xffff;
 
-    // 56K of RAM from $0000 - $DFFF
+    // 32K of RAM from $0000 - $7EFF
     private static final int MEMORY_BASE = 0x0000;
-    private static final int MEMORY_SIZE = 0xE000;
+    private static final int MEMORY_SIZE = 0x7F00;
 
-    // ACIA at $FFD0-$FFD1
-    private static final int ACIA_BASE = 0xFFD0;
+    // ACIA at $7F00-$7F03
+    private static final int ACIA_BASE = 0x7F00;
+	
+    // VIA1 (Keyboard) at $7F40-$7F4F
+    private static final int PIA1_BASE = 0x7F40;
+    // VIA2 at $7F80-$7F9F
+    private static final int PIA2_BASE = 0x7F80;
 
-    // SD controller at $FFD8-$FFDF
-    private static final int SD_BASE = 0xFFD8;
+    // VDP at $7F60-$7F7F
+    private static final int VDP_BASE = 0x7F60;
 
-    // 8KB ROM at $E000-$FFFF
-    private static final int ROM_BASE = 0xE000;
-    private static final int ROM_SIZE = 0x2000;
+    // 32KB ROM at $8000-$FFFF
+    private static final int ROM_BASE = 0x8000;
+    private static final int ROM_SIZE = 0x8000;
 
 
-        // The simulated peripherals
+    // The simulated peripherals
     private final Bus    bus;
     private final Cpu    cpu;
     private final Acia   acia;
+    private final Via6522Keyboard pia1;
+	//private final Pia	pia1;
+    private final Pia    pia2;
     private final Memory ram;
     private       Memory rom;
+    private final Vdp    vdp;
 
 
-    public MulticompMachine(String romFile) throws Exception {
+    public HomebrewMachine(String romFile) throws Exception {
         this.bus = new Bus(BUS_BOTTOM, BUS_TOP);
         this.cpu = new Cpu();
         this.ram = new Memory(MEMORY_BASE, MEMORY_BASE + MEMORY_SIZE - 1, false);
-        this.acia = new Acia6850(ACIA_BASE);
-        this.acia.setBaudRate(0);
+        this.acia = new Acia6551(ACIA_BASE);
+        this.pia1 = new Via6522Keyboard(PIA1_BASE);
+        logger.info("VIA1 Keyboard at {}",this.pia1.startAddress());
+		//this.pia1 = new Via6522_PS2Keyboard(PIA1_BASE);
+        //logger.info("VIA1 PS2 Keyboard at {}",this.pia1.startAddress());
+        this.pia2 = new Via6522(PIA2_BASE);
+        logger.info("VIA2 at {}",this.pia2.startAddress());
+        this.vdp = new Vdp(VDP_BASE, true);
 
         bus.addCpu(cpu);
         bus.addDevice(ram);
-        bus.addDevice(acia, 1);
-        bus.addDevice(new SdController(SD_BASE), 1);
-
+        bus.addDevice(acia);
+        bus.addDevice(pia1);
+        bus.addDevice(pia2);
+        bus.addDevice(vdp);
+        
+		File romImage;
         if (romFile != null) {
-            File romImage = new File("rom.bin");
-            if (romImage.canRead()) {
-                logger.info("Loading ROM image from file " + romImage);
-                this.rom = Memory.makeROM(ROM_BASE, ROM_BASE + ROM_SIZE - 1, romImage);
-            } else {
-                logger.info("Default ROM file " + romImage +
-                        " not found, loading empty R/W memory image.");
-                this.rom = Memory.makeRAM(ROM_BASE, ROM_BASE + ROM_SIZE - 1);
-            }
+            romImage = new File(romFile);
+		}
+		else {
+			romImage = new File("homebrew.bin");
+		}
+        if (romImage.canRead()) {
+            logger.info("Loading ROM image from file {}", romImage);
+            this.rom = Memory.makeROM(ROM_BASE, ROM_BASE + ROM_SIZE - 1, romImage);
         } else {
-            logger.info("No ROM file specified, loading empty R/W memory image.");
+            logger.info("Default ROM file {} not found, loading empty R/W memory image.", romImage);
             this.rom = Memory.makeRAM(ROM_BASE, ROM_BASE + ROM_SIZE - 1);
         }
 
         bus.addDevice(rom);
+        
     }
 
     @Override
@@ -122,7 +134,7 @@ public class MulticompMachine implements Machine {
 
     @Override
     public Pia getPia() {
-        return null;
+        return pia2;
     }
 
     @Override
@@ -131,13 +143,13 @@ public class MulticompMachine implements Machine {
     }
 
     @Override
-    public Vdp getVdp() {
-        return null;
-    }
-
-    @Override
     public Memory getRom() {
         return rom;
+    }
+    
+    @Override
+    public Vdp getVdp() {
+        return vdp;
     }
     
     public void setRom(Memory rom) throws MemoryRangeException {
@@ -165,12 +177,13 @@ public class MulticompMachine implements Machine {
 
     @Override
     public String getName() {
-        return "Multicomp";
+        return "Homebrew";
     }
 
     @Override
     public Via6522Keyboard getKeyboardVia()
     {
-        return null;
+		//return null;
+        return pia1;
     }
 }

@@ -26,7 +26,8 @@ package com.loomcom.symon.ui;
 import com.loomcom.symon.jterminal.JTerminal;
 import com.loomcom.symon.jterminal.vt100.Vt100TerminalModel;
 import com.loomcom.symon.exceptions.FifoUnderrunException;
-import com.loomcom.symon.util.FifoRingBuffer;
+import com.loomcom.symon.util.BlockingFifoRingBuffer;
+import com.loomcom.symon.ui.ConsoleTransferHandler;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -52,14 +53,18 @@ public class Console extends JTerminal implements KeyListener, MouseListener {
 
     // If true, send CRLF (0x0d 0x0a) whenever CR is typed
     private boolean sendCrForLf;
-    private FifoRingBuffer<Character> typeAheadBuffer;
+    private BlockingFifoRingBuffer<Character> typeAheadBuffer;
+
+	//public ConsoleTransferHandler cth;
+
+    public static final int CONSOLE_BUFFER_LENGTH = 102400;
 
     public Console(int columns, int rows, Font font, boolean sendCrForLf) {
         super(new Vt100TerminalModel(columns, rows), font);
     		//super(new Vt100TerminalModel(columns, rows));
         // A small type-ahead buffer, as might be found in any real
         // VT100-style serial terminal.
-        this.typeAheadBuffer = new FifoRingBuffer<>(128);
+        this.typeAheadBuffer = new BlockingFifoRingBuffer<>(CONSOLE_BUFFER_LENGTH);
         this.sendCrForLf = sendCrForLf;
         setBorderWidth(DEFAULT_BORDER_WIDTH);
         addKeyListener(this);
@@ -68,6 +73,9 @@ public class Console extends JTerminal implements KeyListener, MouseListener {
         Border bevelBorder = BorderFactory.createBevelBorder(BevelBorder.LOWERED);
         Border compoundBorder = BorderFactory.createCompoundBorder(emptyBorder, bevelBorder);
         this.setBorder(compoundBorder);
+
+		//cth = new ConsoleTransferHandler();
+		//this.setTransferHandler(cth);
     }
 
     /**
@@ -99,20 +107,7 @@ public class Console extends JTerminal implements KeyListener, MouseListener {
     public void keyTyped(KeyEvent keyEvent) {
         char keyTyped = keyEvent.getKeyChar();
 
-        if (SWAP_CR_AND_LF) {
-            if (keyTyped == 0x0a) {
-                keyTyped = 0x0d;
-            } else if (keyTyped == 0x0d) {
-                keyTyped = 0x0a;
-            }
-        }
-
-        if (sendCrForLf && (keyTyped == 0x0d)) {
-            typeAheadBuffer.push((char) 0x0d);
-            typeAheadBuffer.push((char) 0x0a);
-        } else {
-            typeAheadBuffer.push(keyTyped);
-        }
+        writeChar(keyTyped);
 
         keyEvent.consume();
     }
@@ -134,6 +129,38 @@ public class Console extends JTerminal implements KeyListener, MouseListener {
     public char readInputChar() throws FifoUnderrunException {
         return typeAheadBuffer.pop();
     }
+
+    public void writeChar(char ch)
+    {
+        //typeAheadBuffer.push(ch);
+        if (SWAP_CR_AND_LF) {
+            if (ch == 0x0a) {
+                ch = 0x0d;
+            } else if (ch == 0x0d) {
+                ch = 0x0a;
+            }
+        }
+
+        if (sendCrForLf && (ch == 0x0d)) {
+            typeAheadBuffer.push((char) 0x0d);
+            typeAheadBuffer.push((char) 0x0a);
+        } else {
+            typeAheadBuffer.push(ch);
+        }
+    }
+
+	public void writeString(String str)
+	{
+		for (int i=0; i<str.length(); i++)
+		{
+            writeChar(str.charAt(i));
+            try {
+                Thread.sleep(15);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupted "+e);
+            }
+		}
+	}
 
     /**
      * Handle a key release event.

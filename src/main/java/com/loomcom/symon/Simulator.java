@@ -28,6 +28,9 @@ import com.loomcom.symon.exceptions.*;
 import com.loomcom.symon.machines.Machine;
 import com.loomcom.symon.ui.*;
 import com.loomcom.symon.ui.Console;
+import com.loomcom.symon.ui.ConsoleTransferHandler;
+import com.loomcom.symon.devices.Acia;
+import com.loomcom.symon.devices.Via6522Keyboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +56,13 @@ public class Simulator {
     private final static Logger logger = LoggerFactory.getLogger(Simulator.class.getName());
 
     // UI constants
-    private static final int DEFAULT_FONT_SIZE = 12;
+    private static final int DEFAULT_FONT_SIZE = 16;
     private static final Font DEFAULT_FONT = new Font(Font.MONOSPACED, Font.PLAIN, DEFAULT_FONT_SIZE);
     private static final int CONSOLE_BORDER_WIDTH = 10;
 
-    // Clock periods, in NS, for each speed. 0MHz, 1MHz, 2MHz, 3MHz, 4MHz, 5MHz, 6MHz, 7MHz, 8MHz.
-    private static final long[] CLOCK_PERIODS = {0, 1000, 500, 333, 250, 200, 167, 143, 125};
+    // Clock periods, in NS, for each speed. 0MHz, 1MHz, 2MHz, 2.684MHz, 3MHz, 4MHz, 5MHz, 6MHz, 7MHz, 8MHz.
+    private static final long[] CLOCK_PERIODS = {0, 1000, 500, 371,  333, 250, 200, 167, 143, 125};
+    private static final double[] CLOCK_SPEEDS = {0, 1,    2,   2.68, 3,   4,   5,   6,   7,   8};
 
     // Since it is very expensive to update the UI with Swing's Event Dispatch Thread, we can't afford
     // to refresh the status view on every simulated clock cycle. Instead, we will only refresh the status view
@@ -76,12 +80,13 @@ public class Simulator {
 
     // Number of CPU steps between CRT repaints.
     // TODO: Dynamically refresh the value at runtime based on performance figures to reach ~ 30fps.
-    private static final long STEPS_BETWEEN_CRTC_REFRESHES = 2500;
+    private static final long STEPS_BETWEEN_CRTC_REFRESHES = 12500; // 60Hz
 
     // A counter to keep track of the number of UI updates that have been
     // requested
     private int stepsSinceLastUpdate = 0;
     private int stepsSinceLastCrtcRefresh = 0;
+    private long lastVDPSyncTime = 0;
 
     // The number of steps to run per click of the "Step" button
     private int stepsPerClick = 1;
@@ -104,6 +109,7 @@ public class Simulator {
     private final MemoryWindow memoryWindow;
 
     private final VideoWindow videoWindow;
+    private final VDPWindow vdpWindow;
 
     private final BreakpointsWindow breakpointsWindow;
 
@@ -113,6 +119,7 @@ public class Simulator {
     private Console console;
     private StatusPanel statusPane;
 
+    private JButton reloadROMButton;
     private JButton runStopButton;
     private JButton stepButton;
     private JComboBox<String> stepCountBox;
@@ -125,6 +132,13 @@ public class Simulator {
     private final Object commandMonitorObject = new Object();
 
     private MainCommand command = MainCommand.NONE;
+
+    private TransferActionListener transferActionListener;
+	private ConsoleTransferHandler consoleTH;
+    private byte[] basicProgram;
+    private boolean basicProgramAvailable;
+    private long basicProgramSize;
+    private int basicProgramPtr;
 
     public enum MainCommand {
         NONE,
@@ -157,6 +171,17 @@ public class Simulator {
         } else {
             videoWindow = null;
         }
+        if (machine.getVdp() != null) {
+            vdpWindow = new VDPWindow(machine.getVdp(), 2, 2);
+            VDPWindow.cpu = machine.getCpu();
+        } else {
+            vdpWindow = null;
+        }
+
+        basicProgramAvailable = false;
+
+        Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
+        vdpWindow.setKeyboardVia(keyboardVia);
     }
 
     /**
@@ -172,7 +197,12 @@ public class Simulator {
         this.console = new com.loomcom.symon.ui.Console(80, 25, DEFAULT_FONT, false);
         this.statusPane = new StatusPanel(machine);
 
-        console.setBorderWidth(CONSOLE_BORDER_WIDTH);
+        this.console.setBorderWidth(CONSOLE_BORDER_WIDTH);
+
+        this.consoleTH = new ConsoleTransferHandler();
+        this.console.setTransferHandler(consoleTH);
+		setMappings(this.console);
+        transferActionListener = new TransferActionListener();
 
         // File Chooser
         fileChooser = new JFileChooser(System.getProperty("user.dir"));
@@ -184,8 +214,11 @@ public class Simulator {
 
         consoleContainer.setLayout(new BorderLayout());
         consoleContainer.setBorder(new EmptyBorder(10, 10, 10, 0));
+        consoleContainer.setTransferHandler(consoleTH);
+
         buttonContainer.setLayout(new FlowLayout());
 
+		reloadROMButton = new JButton("Reload ROM");
         runStopButton = new JButton("Run");
         stepButton = new JButton("Step");
         JButton softResetButton = new JButton("Soft Reset");
@@ -205,6 +238,7 @@ public class Simulator {
             }
         });
 
+        buttonContainer.add(reloadROMButton);
         buttonContainer.add(runStopButton);
         buttonContainer.add(stepButton);
         buttonContainer.add(stepCountBox);
@@ -262,8 +296,47 @@ public class Simulator {
         menuBar = new SimulatorMenu();
         mainWindow.setJMenuBar(menuBar);
 
+        reloadROMButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if (runLoop != null && runLoop.isRunning()) {
+                    Simulator.this.handleStop();
+                }
+                //loadROM();
+				try {
+					// Load the new ROM image
+					File romImage = new File("homebrew.bin");
+					Memory rom = Memory.makeROM(machine.getRomBase(), machine.getRomBase() + machine.getRomSize() - 1, romImage);
+					machine.setRom(rom);
+
+					// Now, reset
+					machine.getCpu().reset();
+
+					updateVisibleState();
+
+					// Refresh breakpoints to show new memory contents.
+					breakpoints.refresh();
+				} catch (IOException ex) {
+					logger.error("Unable to read ROM file: {}", ex.getMessage());
+					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+				} catch (MemoryRangeException ex) {
+					logger.error("Memory range error while loading ROM file: {}", ex.getMessage());
+					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+				} catch (MemoryAccessException ex) {
+					logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
+					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+				}
+
+				Simulator.this.handleStart();
+            }
+        });
+
+
         mainWindow.pack();
         mainWindow.setVisible(true);
+
+        vdpWindow.setLocation(1000,0);
+        vdpWindow.setVisible(true);
 
         console.requestFocus();
         handleReset(false);
@@ -338,7 +411,7 @@ public class Simulator {
             }
             updateVisibleState();
         } catch (SymonException ex) {
-            logger.error("Exception during simulator step", ex);
+            logger.error("Exception during simulator step. PC"+Integer.toHexString(machine.getCpu().getProgramCounter())+".",ex);
             ex.printStackTrace();
         }
     }
@@ -353,16 +426,29 @@ public class Simulator {
 
         // Read from the ACIA and immediately update the console if there's
         // output ready.
-        if (machine.getAcia() != null && machine.getAcia().hasTxChar()) {
-            // This is thread-safe
-            console.print(Character.toString((char) machine.getAcia().txRead(true)));
-            console.repaint();
+        if (machine.getAcia() != null) {
+            while( machine.getAcia().hasTxChar()) {
+                // This is thread-safe
+                console.print(Character.toString((char) machine.getAcia().txRead(true)));
+                console.repaint();
+            }
         }
 
         // If a key has been pressed, fill the ACIA.
         try {
-            if (machine.getAcia() != null && console.hasInput()) {
-                machine.getAcia().rxWrite((int) console.readInputChar());
+            Acia acia = machine.getAcia();
+            if (acia != null) {
+                // key press from console ...
+                if (console.hasInput() && !acia.hasRxChar()) {
+					acia.rxWrite((int) console.readInputChar());
+                }
+                // ... or pasted program
+                if (basicProgramAvailable && !acia.hasRxChar()) {
+                    acia.rxWrite((int) basicProgram[basicProgramPtr++]);
+                    if(basicProgramPtr >= basicProgramSize) {
+                        basicProgramAvailable = false;
+                    }
+                }
             }
         } catch (FifoUnderrunException ex) {
             logger.error("Console type-ahead buffer underrun!");
@@ -374,6 +460,21 @@ public class Simulator {
                 videoWindow.repaint();
             }
         }
+        /*
+        if (vdpWindow != null && stepsSinceLastCrtcRefresh++ > STEPS_BETWEEN_CRTC_REFRESHES) {
+            stepsSinceLastCrtcRefresh = 0;
+            if (vdpWindow.isVisible()) {
+                //vdpWindow.repaint();
+                logger.info("VDP sync : "+(System.currentTimeMillis() - lastVDPSyncTime));
+                lastVDPSyncTime = System.currentTimeMillis();
+            }
+        }
+        if (vdpWindow != null && vdpWindow.isVisible() && stepsSinceLastCrtcRefresh == (48*43))
+        {
+            vdpWindow.repaint();
+        }
+        */
+
 
         // This is a very expensive update, and we're doing it without
         // a delay, so we don't want to overwhelm the Swing event processing thread
@@ -406,6 +507,53 @@ public class Simulator {
         updateVisibleState();
     }
 
+	private void loadROM() {
+            try {
+                int retVal = fileChooser.showOpenDialog(mainWindow);
+                if (retVal == JFileChooser.APPROVE_OPTION) {
+                    File romFile = fileChooser.getSelectedFile();
+                    if (romFile.canRead()) {
+                        long fileSize = romFile.length();
+
+                        if (fileSize != machine.getRomSize()) {
+                            throw new IOException("ROM file must be exactly " + String.valueOf(machine.getRomSize()) + " bytes.");
+                        }
+
+                        // Load the new ROM image
+                        Memory rom = Memory.makeROM(machine.getRomBase(), machine.getRomBase() + machine.getRomSize() - 1, romFile);
+                        machine.setRom(rom);
+
+                        // Now, reset
+                        machine.getCpu().reset();
+
+                        updateVisibleState();
+
+                        // Refresh breakpoints to show new memory contents.
+                        breakpoints.refresh();
+
+                        logger.info("ROM File `{}' loaded at {}", romFile.getName(),
+                                String.format("0x%04X", machine.getRomBase()));
+                        // TODO: "Don't Show Again" checkbox
+                        //JOptionPane.showMessageDialog(mainWindow,
+                        //        "Loaded Successfully At " +
+                        //                String.format("$%04X", machine.getRomBase()),
+                        //        "OK",
+                        //        JOptionPane.PLAIN_MESSAGE);
+
+                    }
+                }
+            } catch (IOException ex) {
+                logger.error("Unable to read ROM file: {}", ex.getMessage());
+                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+            } catch (MemoryRangeException ex) {
+                logger.error("Memory range error while loading ROM file: {}", ex.getMessage());
+                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+            } catch (MemoryAccessException ex) {
+                logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
+                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+            }
+	}
+
     /**
      * The main run thread.
      */
@@ -418,11 +566,19 @@ public class Simulator {
 
         public void requestStop() {
             isRunning = false;
+            if(vdpWindow != null)
+            {
+                vdpWindow.bCPUIsRunning = false;
+            }
         }
 
         public void run() {
             logger.debug("Starting main run loop.");
             isRunning = true;
+            if(vdpWindow != null)
+            {
+                vdpWindow.bCPUIsRunning = true;
+            }
 
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -441,7 +597,7 @@ public class Simulator {
                     step();
                 } while (shouldContinue());
             } catch (SymonException ex) {
-                logger.error("Exception in main simulator run thread. Exiting run.", ex);
+                logger.error("Exception in main simulator run thread. PC"+Integer.toHexString(machine.getCpu().getProgramCounter())+".", ex);
             }
 
             SwingUtilities.invokeLater(new Runnable() {
@@ -461,6 +617,10 @@ public class Simulator {
             });
 
             isRunning = false;
+            if(vdpWindow != null)
+            {
+                vdpWindow.bCPUIsRunning = false;
+            }
         }
 
         /**
@@ -537,6 +697,16 @@ public class Simulator {
         }
     }
 
+	class PasteFromFileAction extends AbstractAction {
+		public PasteFromFileAction() {
+            super("Paste from file", null);
+            putValue(SHORT_DESCRIPTION, "Paste from file");
+		}
+        public void actionPerformed(ActionEvent actionEvent) {
+            DoPasteFromFile();
+		}
+	}
+
     class LoadRomAction extends AbstractAction {
         public LoadRomAction() {
             super("Load ROM...", null);
@@ -545,50 +715,7 @@ public class Simulator {
         }
 
         public void actionPerformed(ActionEvent actionEvent) {
-            try {
-                int retVal = fileChooser.showOpenDialog(mainWindow);
-                if (retVal == JFileChooser.APPROVE_OPTION) {
-                    File romFile = fileChooser.getSelectedFile();
-                    if (romFile.canRead()) {
-                        long fileSize = romFile.length();
-
-                        if (fileSize != machine.getRomSize()) {
-                            throw new IOException("ROM file must be exactly " + String.valueOf(machine.getRomSize()) + " bytes.");
-                        }
-
-                        // Load the new ROM image
-                        Memory rom = Memory.makeROM(machine.getRomBase(), machine.getRomBase() + machine.getRomSize() - 1, romFile);
-                        machine.setRom(rom);
-
-                        // Now, reset
-                        machine.getCpu().reset();
-
-                        updateVisibleState();
-
-                        // Refresh breakpoints to show new memory contents.
-                        breakpoints.refresh();
-
-                        logger.info("ROM File `{}' loaded at {}", romFile.getName(),
-                                String.format("0x%04X", machine.getRomBase()));
-                        // TODO: "Don't Show Again" checkbox
-                        JOptionPane.showMessageDialog(mainWindow,
-                                "Loaded Successfully At " +
-                                        String.format("$%04X", machine.getRomBase()),
-                                "OK",
-                                JOptionPane.PLAIN_MESSAGE);
-
-                    }
-                }
-            } catch (IOException ex) {
-                logger.error("Unable to read ROM file: {}", ex.getMessage());
-                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-            } catch (MemoryRangeException ex) {
-                logger.error("Memory range error while loading ROM file: {}", ex.getMessage());
-                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-            } catch (MemoryAccessException ex) {
-                logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
-                JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-            }
+			loadROM();
         }
     }
 
@@ -620,6 +747,9 @@ public class Simulator {
             traceLog.dispose();
             if (videoWindow != null) {
                 videoWindow.dispose();
+            }
+            if (vdpWindow != null) {
+                vdpWindow.dispose();
             }
             mainWindow.dispose();
 
@@ -670,9 +800,9 @@ public class Simulator {
         private int speed;
 
         public SetSpeedAction(int speed) {
-            super(Integer.toString(speed) + " MHz", null);
+            super(Double.toString(CLOCK_SPEEDS[speed]) + " MHz", null);
             this.speed = speed;
-            putValue(SHORT_DESCRIPTION, "Set simulated speed to " + speed + " MHz.");
+            putValue(SHORT_DESCRIPTION, "Set simulated speed to " + CLOCK_SPEEDS[speed] + " MHz.");
         }
 
         @Override
@@ -752,6 +882,24 @@ public class Simulator {
         }
     }
 
+    class ToggleVdpWindowAction extends AbstractAction {
+        public ToggleVdpWindowAction() {
+            super("Vdp Window", null);
+            putValue(SHORT_DESCRIPTION, "Show or Hide the Vdp Window");
+        }
+
+        public void actionPerformed(ActionEvent actionEvent) {
+            synchronized (vdpWindow) {
+                if (vdpWindow.isVisible()) {
+                    vdpWindow.setVisible(false);
+                } else {
+                    vdpWindow.setVisible(true);
+                    lastVDPSyncTime = System.currentTimeMillis();
+                }
+            }
+        }
+    }
+
     class ToggleBreakpointWindowAction extends AbstractAction {
         public ToggleBreakpointWindowAction() {
             super("Breakpoints...", null);
@@ -773,6 +921,8 @@ public class Simulator {
         // Menu Items
         private JMenuItem loadProgramItem;
         private JMenuItem loadRomItem;
+		private JMenuItem pasteItem;
+		private JMenuItem filepasteItem;
 
         /**
          * Create a new SimulatorMenu instance.
@@ -808,6 +958,7 @@ public class Simulator {
 
             JMenu fileMenu = new JMenu("File");
 
+
             loadProgramItem = new JMenuItem(new LoadProgramAction());
             fileMenu.add(loadProgramItem);
 
@@ -826,6 +977,25 @@ public class Simulator {
 
             add(fileMenu);
 
+			/*
+			 * Edit Menu
+			 */
+			JMenu editMenu = new JMenu("Edit");
+			//pasteItem = new JMenuItem(new PasteAction());
+			pasteItem = new JMenuItem("Paste");
+			pasteItem.setActionCommand((String)consoleTH.getPasteAction().
+					 getValue(Action.NAME));
+			pasteItem.addActionListener(transferActionListener);
+			pasteItem.setAccelerator(
+			  KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
+			pasteItem.setMnemonic(KeyEvent.VK_P);
+			editMenu.add(pasteItem);
+
+            filepasteItem = new JMenuItem(new PasteFromFileAction());
+			editMenu.add(filepasteItem);
+
+			add(editMenu);
+			
             /*
              * View Menu
              */
@@ -877,6 +1047,18 @@ public class Simulator {
                 viewMenu.add(showVideoWindow);
             }
 
+            if (vdpWindow != null) {
+                final JCheckBoxMenuItem showVdpWindow = new JCheckBoxMenuItem(new ToggleVdpWindowAction());
+                vdpWindow.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        showVdpWindow.setSelected(false);
+                    }
+                });
+				showVdpWindow.setSelected(true);
+                viewMenu.add(showVdpWindow);
+            }
+
             add(viewMenu);
 
             /*
@@ -903,9 +1085,9 @@ public class Simulator {
             ButtonGroup speedGroup = new ButtonGroup();
 
             makeSpeedMenuItem(1, speedSubMenu, speedGroup);
-            makeSpeedMenuItem(2, speedSubMenu, speedGroup);
-            makeSpeedMenuItem(4, speedSubMenu, speedGroup);
-            makeSpeedMenuItem(8, speedSubMenu, speedGroup);
+            makeSpeedMenuItem(3, speedSubMenu, speedGroup);
+            makeSpeedMenuItem(5, speedSubMenu, speedGroup);
+            makeSpeedMenuItem(9, speedSubMenu, speedGroup);
 
             simulatorMenu.add(speedSubMenu);
             simulatorMenu.add(cpuTypeMenu);
@@ -973,4 +1155,61 @@ public class Simulator {
         });
     }
 
+    private void setMappings(Console term) {
+        ActionMap map = term.getActionMap();
+        map.put(consoleTH.getPasteAction().getValue(Action.NAME),
+                consoleTH.getPasteAction());
+    }
+
+    private void DoPasteFromFile()
+    {
+        try {
+            basicProgramAvailable = false;
+            basicProgramSize = 0;
+            int retVal = fileChooser.showOpenDialog(mainWindow);
+            if (retVal == JFileChooser.APPROVE_OPTION) {
+                File f = fileChooser.getSelectedFile();
+                if (f.canRead()) {
+                    if (f.length() > console.CONSOLE_BUFFER_LENGTH) {
+                        logger.error("File too big.");
+                        return;
+                    }
+    
+                    int i = 0;
+                    int filesize = (int)(2*f.length()); // worst case, every line is line-feed
+                    basicProgram = new byte[filesize];
+
+                    FileInputStream fis = new FileInputStream(f);
+                    BufferedInputStream bis = new BufferedInputStream(fis);
+                    DataInputStream dis = new DataInputStream(bis);
+					// LF = 0x0A CR=0x0D. Dos has CR-LF, Unix has LF
+					// The basic interpreter expects Dos (i.e. both), so Add CR if needed.
+					boolean bIsUnixFormat=true;
+                    while (dis.available() != 0) {
+						byte b = dis.readByte();
+						if (bIsUnixFormat && b == 0x0D)
+						{
+							bIsUnixFormat = false;
+						}
+						if(bIsUnixFormat && b == 0x0A )
+						{
+                            basicProgram[i++] = 0x0D;
+                            basicProgram[i++] = 0x0A;
+                        }
+						else
+						{
+							basicProgram[i++] = b;
+						}
+                    }
+                    basicProgramSize = i;
+                    basicProgramAvailable = true;
+                    basicProgramPtr = 0;
+                    fis.close();
+                }
+            }
+        } catch (IOException ex) {
+            logger.error("Unable to read program file.", ex);
+            JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 }

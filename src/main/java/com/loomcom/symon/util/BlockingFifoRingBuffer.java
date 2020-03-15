@@ -28,26 +28,26 @@ import com.loomcom.symon.exceptions.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.AbstractQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * A FIFO buffer with a bounded maximum size.
  */
-public class FifoRingBuffer<E> implements Iterable<E> {
+public class BlockingFifoRingBuffer<E> implements Iterable<E> {
 
-    private Queue<E> fifoBuffer;
+    private LinkedBlockingQueue<E> fifoBuffer;
     private int maxLength;
 
-    public FifoRingBuffer(int maxLength) {
-        this.fifoBuffer = new LinkedList<>();
+    public BlockingFifoRingBuffer(int maxLength) {
+        this.fifoBuffer = new LinkedBlockingQueue<>();
         this.maxLength = maxLength;
     }
 
     public E pop() throws FifoUnderrunException {
-        E val = fifoBuffer.remove();
-		if(maxLength != 50000) {
-			System.out.println("Pop "+val);
-		}
-		return val;
+        E item = fifoBuffer.remove();
+        //System.out.println("Pop "+item);
+        return item;
     }
 
     public boolean isEmpty() {
@@ -55,25 +55,17 @@ public class FifoRingBuffer<E> implements Iterable<E> {
     }
 
     public void push(E val) {
-		if(maxLength != 50000) {
-			System.out.println("Queue size "+fifoBuffer.size()+" push "+val);
-		}
         if (fifoBuffer.size() == maxLength) {
-			if(maxLength != 50000) {
-				System.out.println("Queue full");
-			}
             // Delete the oldest element.
-            fifoBuffer.remove();
+            E item = fifoBuffer.remove();
+            System.out.println("Full - remove "+item);
         }
         fifoBuffer.offer(val);
+        //System.out.println("Push "+val);
     }
 
     public E peek() {
-        E val = fifoBuffer.peek();
-		if(maxLength != 50000) {
-			System.out.println("Peek "+val);
-		}
-        return val;
+        return fifoBuffer.peek();
     }
 
     public void reset() {

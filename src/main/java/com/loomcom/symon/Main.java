@@ -28,8 +28,8 @@ package com.loomcom.symon;
 import com.loomcom.symon.machines.MulticompMachine;
 import com.loomcom.symon.machines.SimpleMachine;
 import com.loomcom.symon.machines.SymonMachine;
+import com.loomcom.symon.machines.HomebrewMachine;
 import org.apache.commons.cli.*;
-
 import java.util.Locale;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -45,7 +45,7 @@ public class Main {
      */
     public static void main(String[] args) throws Exception {
         
-        Class machineClass = SymonMachine.class;
+        Class machineClass = HomebrewMachine.class;
 
         Options options = new Options();
 
@@ -71,6 +71,9 @@ public class Main {
                         break;
                     case "symon":
                         machineClass = SymonMachine.class;
+                        break;
+                    case "homebrew":
+                        machineClass = HomebrewMachine.class;
                         break;
                     default:
                         System.err.println("Could not start Symon. Unknown machine type " + machine);
@@ -102,7 +105,7 @@ public class Main {
 
             while (true) {
                 if (machineClass == null) {
-                    Object[] possibilities = {"Symon", "Multicomp", "Simple"};
+                    Object[] possibilities = {"Homebrew", "Symon", "Multicomp", "Simple"};
                     String s = (String)JOptionPane.showInputDialog(
                             null,
                             "Please choose the machine type to be emulated:",
@@ -110,20 +113,22 @@ public class Main {
                             JOptionPane.PLAIN_MESSAGE,
                             null,
                             possibilities,
-                            "Symon");
+                            "Homebrew");
 
 
                     if (s != null && s.equals("Multicomp")) {
                         machineClass = MulticompMachine.class;
                     } else if (s != null && s.equals("Simple")) {
                         machineClass = SimpleMachine.class;
-                    } else {
+		            } else if (s != null && s.equals("Homebrew")) {
+		                machineClass = HomebrewMachine.class;
+		            } else {
                         machineClass = SymonMachine.class;
                     }
                 }
 
                 if (cpuBehavior == null) {
-                    cpuBehavior = InstructionTable.CpuBehavior.NMOS_6502;
+                    cpuBehavior = InstructionTable.CpuBehavior.CMOS_6502;
                 }
 
                 final Simulator simulator = new Simulator(machineClass, cpuBehavior, romFile);

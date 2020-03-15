@@ -137,6 +137,11 @@ public class SymonMachine implements Machine {
         return rom;
     }
     
+    @Override
+    public Vdp getVdp() {
+        return null;
+    }
+
     public void setRom(Memory rom) throws MemoryRangeException {
         if(this.rom != null) {
             bus.removeDevice(this.rom);
@@ -165,5 +170,11 @@ public class SymonMachine implements Machine {
         return "Symon";
     }
 
+
+    @Override
+    public Via6522Keyboard getKeyboardVia()
+    {
+        return null;
+    }
 
 }

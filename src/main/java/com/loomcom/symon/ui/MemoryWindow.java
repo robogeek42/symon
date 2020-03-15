@@ -49,13 +49,15 @@ public class MemoryWindow extends JFrame implements ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(MemoryWindow.class);
 
+    private static final Font MT_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+
     private MemoryTableModel memoryTableModel;
     private JTable memoryTable;
     private JTextField pageNumberTextField;
     private JButton previousPageButton;
     private JButton nextPageButton;
 
-    private static final Dimension MINIMUM_SIZE = new Dimension(320, 600);
+    private static final Dimension MINIMUM_SIZE = new Dimension(480, 640);
 
     // The width of column 0 (address), in pixels
     private static final int ADDR_COL_WIDTH = 48;
@@ -124,6 +126,7 @@ public class MemoryWindow extends JFrame implements ActionListener {
         memoryTable.getTableHeader().setResizingAllowed(false);
         memoryTable.getTableHeader().setVisible(false);
         memoryTable.setShowGrid(false);
+        memoryTable.setFont(MT_FONT);
 
         memoryTable.getColumnModel().getColumn(0).setMaxWidth(ADDR_COL_WIDTH);
 
