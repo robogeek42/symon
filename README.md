@@ -1,5 +1,5 @@
-SYMON - A 6502 System Simulator
-===============================
+SYMON - A 6502 System Simulator For NAM1 with TMS9918
+=====================================================
 
 **Version:** 1.3.1
 
