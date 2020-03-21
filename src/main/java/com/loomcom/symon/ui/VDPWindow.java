@@ -497,17 +497,15 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 
                 int vpos_adjusted = getVPos(sprite);
 
-				/*
                 for (int i=0;i<(spriteSize*mag+1);i++)
                 {
-                    sprites_per_line[vpos_adjusted+32]++;
-                    if (sprites_per_line[vpos_adjusted+32] >4)
+                    sprites_per_line[vpos_adjusted+32+i]++;
+                    if (sprites_per_line[vpos_adjusted+32+i] >4)
                     {
-                        fifth_sprite[vpos_adjusted+32] = sprite;
+                        fifth_sprite[vpos_adjusted+32+i] = sprite;
                         vdp.setFifthSprite(sprite);
                     }
                 }
-				*/
 				sprite_list.add(new Integer(sprite));
 			}
            
@@ -567,7 +565,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 									int b = (ch << p) & 0x80;
 									if(b>0) // only set where pixel==1, otherwise it is transparent
 									{
-                                        //if((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
+                                        if((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
                                         {
                                             patternPlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)] = packCol;
 											//logger.info("     * p"+p+" y "+(y+row*mag)*VDPScreenWidth+" x "+(x + p*mag));
@@ -576,7 +574,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                                                 patternPlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] = packCol;
                                             }
                                         }
-                                        //if((fifth_sprite[32+y+row*mag+1]==0) || sprite<fifth_sprite[32+y+row*mag+1])
+                                        if((fifth_sprite[32+y+row*mag+1]==0) || sprite<fifth_sprite[32+y+row*mag+1])
                                         {
                                             if(bSpriteMagnify)
                                             {

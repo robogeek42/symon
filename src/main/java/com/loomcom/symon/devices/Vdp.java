@@ -129,24 +129,6 @@ public class Vdp extends Device {
         this.ColorTextBG = 14;
 
 		colors = new Color[16];
-		/*
-		colors[0] = new Color(0, 0, 0, 0); // transparent
-		colors[1] = new Color(0, 0, 0, 255); // black
-		colors[2] = new Color(0, 255, 0, 255); // medium green
-		colors[3] = new Color(80, 255, 80, 255); // light green
-		colors[4] = new Color(0, 0, 190, 255); // dark blue
-		colors[5] = new Color(80, 80, 255, 255); // light blue
-		colors[6] = new Color(190, 0, 0, 255); // dark red
-		colors[7] = new Color(0, 255, 255, 255); // cyan 
-		colors[8] = new Color(255, 0, 0, 255); // medium red 
-		colors[9] = new Color(255, 80, 80, 255); // light red 
-		colors[10] = new Color(180, 180, 0, 255); // dark yellow 
-		colors[11] = new Color(255, 255, 80, 255); // light yellow 
-		colors[12] = new Color(0, 190, 0, 255); // dark green
-		colors[13] = new Color(255, 0, 255, 255); // magenta 
-		colors[14] = new Color(180, 180, 180, 255); // grey
-		colors[15] = new Color(255, 255, 255, 255); // white
-		*/
 
 	// colours from lospec.com
 	
