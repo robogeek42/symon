@@ -220,7 +220,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 		this.finalPixels = new int[rasterWidth*rasterHeight];
         this.backdropColor = vdp.getBackdropColor();
 		this.patternPlane = new int[VDPScreenWidth*VDPScreenHeight];
-		//this.spritePlane = new int[VDPScreenWidth*VDPScreenHeight];
+		this.spritePlane = new int[VDPScreenWidth*VDPScreenHeight];
         
         setMode(vdp);
 
@@ -508,6 +508,11 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                 }
 				sprite_list.add(new Integer(sprite));
 			}
+			
+			/* Clear sprite plane to transparent */
+			for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
+				spritePlane[i] = -1;
+			}
            
             // Iterate through the list in reverse
             ListIterator<Integer> li = sprite_list.listIterator(sprite_list.size());
@@ -571,15 +576,21 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 											//logger.info("     * p"+p+" y "+(y+row*mag)*VDPScreenWidth+" x "+(x + p*mag));
                                             if(bSpriteMagnify)
                                             {
-                                                patternPlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] = packCol;
+												if (spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] == -1)
+												{
+													/* set sprite coincidence flag */
+													vdp.setCoincidenceFlag();
+													logger.info("COLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
+												}
+                                                spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] = packCol;
                                             }
                                         }
                                         if((fifth_sprite[32+y+row*mag+1]==0) || sprite<fifth_sprite[32+y+row*mag+1])
                                         {
                                             if(bSpriteMagnify)
                                             {
-                                                patternPlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)] = packCol;
-                                                patternPlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)+1] = packCol;
+                                                spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)] = packCol;
+                                                spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)+1] = packCol;
                                             }
 										}
 									}
@@ -603,14 +614,16 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                     try {
                         if (x<VDPScreenWidth)
                         {
-                            finalPixels[j*rasterWidth+i] = patternPlane[y*VDPScreenWidth+x];
+                            //finalPixels[j*rasterWidth+i] = patternPlane[y*VDPScreenWidth+x];
+                            finalPixels[j*rasterWidth+i] = spritePlane[y*VDPScreenWidth+x] == -1 ?
+																patternPlane[y*VDPScreenWidth+x]:
+																spritePlane[y*VDPScreenWidth+x];
                         }
                         else
                         {
                             finalPixels[j*rasterWidth+i] = packColBG;
                         }
 
-                        //    spritePlane[y*VDPScreenWidth+x]==0?patternPlane[y*VDPScreenWidth+x]:spritePlane[y*VDPScreenWidth+x];
                     } catch (ArrayIndexOutOfBoundsException e){
                         logger.info("ArrayIndex: patternPlane["+x+","+y+"]");
                     }
