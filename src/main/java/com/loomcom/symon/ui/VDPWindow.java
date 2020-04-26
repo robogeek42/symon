@@ -479,6 +479,19 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 			int mag = bSpriteMagnify?2:1;
             int spriteSize = bLargeSprites?16:8;
 
+			 logger.info("Mode: "+vdp.getVDPMode());
+			// dump sprite block
+			int offset = VAddr_SpriteAttribTable;
+			String str = "SAB:";
+			for (int i =0; i < 128; i++)
+			{
+				int r = vdp.readVRAM(offset+i);
+				if (i%4 == 0) { str += String.format("%d[",i/4); }
+				str += String.format("%02X", r);
+				if (i%4 == 3) { str += "] "; }
+			}
+			logger.info(str);
+
 			// sprites are processed from 0 -> 31 and if vpos==0xD00 is observed, sprite processing is stopped. 
 			// But, sprites have to be draw back to front (31 -> 0) to make hidden object work.
 			// So, save sprites to be drawn in order in a list.
@@ -542,13 +555,11 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                     hpos -= 32;
                 }
 				
-                /*
-                logger.info("Sprite: "+sprite+" Pos "+hpos+","+vpos+
-                        " pattern "+pattern+" color "+col+" 0x"+Integer.toHexString(packCol)+
-                        " Early "+((earlyclock>0)?"T":"F")+
-                        " PAddr 0x"+Integer.toHexString(VAddr_SpritePatternTable + pattern*8)+
-                        ""+(bLargeSprites?" Large":"")+(bSpriteMagnify?" Magnify":""));
-                 */
+                //logger.info("Sprite: "+sprite+" Pos "+hpos+","+vpos+
+                //        " pattern "+pattern+" color "+col+" 0x"+Integer.toHexString(packCol)+
+                //        " Early "+((earlyclock>0)?"T":"F")+
+                //        " PAddr 0x"+Integer.toHexString(VAddr_SpritePatternTable + pattern*8)+
+                //        ""+(bLargeSprites?" Large":"")+(bSpriteMagnify?" Magnify":""));
 
 				for (int block=0; block < blocks; block++)
 				{
@@ -577,40 +588,41 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 									int b = (ch << p) & 0x80;
 									if (b>0) // only set where pixel==1, otherwise it is transparent
 									{
+										offset = (y+row*mag)*VDPScreenWidth + (x + p*mag);
                                         if ((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
                                         {
-											if (spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)] >= 0)
+											//logger.info("     * p"+p+" SP offset "+offset+ " Cur " + Integer.toHexString(spritePlane[offset]) + " -> "+Integer.toHexString(packCol));
+											if (spritePlane[offset] != -1)
 											{
 												vdp.setCoincidenceFlag();
-												logger.info("COLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
+												//logger.info("COLLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
 											}
-                                            spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)] = packCol;
+                                            spritePlane[offset] = packCol;
 
-											//logger.info("     * p"+p+" y "+(y+row*mag)*VDPScreenWidth+" x "+(x + p*mag));
                                             if (bSpriteMagnify)
 
                                             {
-												if (spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] >= 0)
+												if (spritePlane[offset+1] >= 0)
 												{
 													vdp.setCoincidenceFlag();
 												}
-                                                spritePlane[(y+row*mag)*VDPScreenWidth + (x + p*mag)+1] = packCol;
+                                                spritePlane[offset+1] = packCol;
                                             }
                                         }
                                         if ((fifth_sprite[32+y+row*mag+1]==0) || sprite<fifth_sprite[32+y+row*mag+1])
                                         {
                                             if (bSpriteMagnify)
                                             {
-												if (spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)] >= 0)
+												if (spritePlane[offset+VDPScreenWidth] >= 0)
 												{
 													vdp.setCoincidenceFlag();
 												}
-                                                spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)] = packCol;
-												if (spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)+1] >= 0)
+                                                spritePlane[offset+VDPScreenWidth] = packCol;
+												if (spritePlane[offset+VDPScreenWidth+1] >= 0)
 												{
 													vdp.setCoincidenceFlag();
 												}
-                                                spritePlane[(y+row*mag+1)*VDPScreenWidth + (x + p*mag)+1] = packCol;
+                                                spritePlane[offset+VDPScreenWidth+1] = packCol;
                                             }
 										}
 									}
