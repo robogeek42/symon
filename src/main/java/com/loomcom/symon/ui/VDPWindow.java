@@ -479,18 +479,20 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 			int mag = bSpriteMagnify?2:1;
             int spriteSize = bLargeSprites?16:8;
 
-			 logger.info("Mode: "+vdp.getVDPMode());
+			/* Debug - print sprite info
+			logger.info("Mode: "+vdp.getVDPMode());
 			// dump sprite block
-			int offset = VAddr_SpriteAttribTable;
+			int os = VAddr_SpriteAttribTable;
 			String str = "SAB:";
 			for (int i =0; i < 128; i++)
 			{
-				int r = vdp.readVRAM(offset+i);
+				int r = vdp.readVRAM(os+i);
 				if (i%4 == 0) { str += String.format("%d[",i/4); }
 				str += String.format("%02X", r);
 				if (i%4 == 3) { str += "] "; }
 			}
 			logger.info(str);
+			*/
 
 			// sprites are processed from 0 -> 31 and if vpos==0xD00 is observed, sprite processing is stopped. 
 			// But, sprites have to be draw back to front (31 -> 0) to make hidden object work.
@@ -588,7 +590,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 									int b = (ch << p) & 0x80;
 									if (b>0) // only set where pixel==1, otherwise it is transparent
 									{
-										offset = (y+row*mag)*VDPScreenWidth + (x + p*mag);
+										int offset = (y+row*mag)*VDPScreenWidth + (x + p*mag);
                                         if ((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
                                         {
 											//logger.info("     * p"+p+" SP offset "+offset+ " Cur " + Integer.toHexString(spritePlane[offset]) + " -> "+Integer.toHexString(packCol));
