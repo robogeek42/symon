@@ -523,7 +523,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 						if (setFifthSprite == 0)
 						{
 							vdp.setFifthSprite(sprite);
-							logger.info("FIFTH Sprite: "+sprite+" VPos "+vpos_adjusted+"");
+							//logger.info("FIFTH Sprite: "+sprite+" VPos "+vpos_adjusted+"");
 							setFifthSprite = sprite;
 						}
                     }
