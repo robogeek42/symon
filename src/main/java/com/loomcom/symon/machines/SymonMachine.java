@@ -177,4 +177,9 @@ public class SymonMachine implements Machine {
         return null;
     }
 
+    @Override
+	public PCVirtualKeyboard getPCVirtualKeyboard()
+    {
+        return null;
+    }
 }

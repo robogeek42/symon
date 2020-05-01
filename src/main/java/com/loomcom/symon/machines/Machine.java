@@ -33,6 +33,7 @@ import com.loomcom.symon.devices.Pia;
 import com.loomcom.symon.devices.Vdp;
 import com.loomcom.symon.devices.Via6522Keyboard;
 import com.loomcom.symon.exceptions.MemoryRangeException;
+import com.loomcom.symon.devices.PCVirtualKeyboard;
 
 
 public interface Machine {
@@ -64,4 +65,6 @@ public interface Machine {
     String getName();
 
     Via6522Keyboard getKeyboardVia();
+
+	PCVirtualKeyboard getPCVirtualKeyboard();
 }

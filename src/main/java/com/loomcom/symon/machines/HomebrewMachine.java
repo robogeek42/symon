@@ -56,6 +56,9 @@ public class HomebrewMachine implements Machine {
     // VDP at $7F60-$7F7F
     private static final int VDP_BASE = 0x7F60;
 
+	// PC virtual Keyboard
+	private static final int PCVKBD_BASE = 0x7FA0;
+
     // 32KB ROM at $8000-$FFFF
     private static final int ROM_BASE = 0x8000;
     private static final int ROM_SIZE = 0x8000;
@@ -71,7 +74,7 @@ public class HomebrewMachine implements Machine {
     private final Memory ram;
     private       Memory rom;
     private final Vdp    vdp;
-
+	private final PCVirtualKeyboard pcvkbd;
 
     public HomebrewMachine(String romFile) throws Exception {
         this.bus = new Bus(BUS_BOTTOM, BUS_TOP);
@@ -80,11 +83,11 @@ public class HomebrewMachine implements Machine {
         this.acia = new Acia6551(ACIA_BASE);
         this.pia1 = new Via6522Keyboard(PIA1_BASE);
         logger.info("VIA1 Keyboard at {}",this.pia1.startAddress());
-		//this.pia1 = new Via6522_PS2Keyboard(PIA1_BASE);
-        //logger.info("VIA1 PS2 Keyboard at {}",this.pia1.startAddress());
         this.pia2 = new Via6522(PIA2_BASE);
         logger.info("VIA2 at {}",this.pia2.startAddress());
         this.vdp = new Vdp(VDP_BASE, true);
+
+		this.pcvkbd = new PCVirtualKeyboard(PCVKBD_BASE);
 
         bus.addCpu(cpu);
         bus.addDevice(ram);
@@ -92,6 +95,7 @@ public class HomebrewMachine implements Machine {
         bus.addDevice(pia1);
         bus.addDevice(pia2);
         bus.addDevice(vdp);
+		bus.addDevice(pcvkbd);
         
 		File romImage;
         if (romFile != null) {
@@ -186,4 +190,10 @@ public class HomebrewMachine implements Machine {
 		//return null;
         return pia1;
     }
+
+	@Override
+	public PCVirtualKeyboard getPCVirtualKeyboard()
+	{
+		return pcvkbd;
+	}
 }

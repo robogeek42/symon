@@ -32,6 +32,7 @@ import com.loomcom.symon.devices.Memory;
 import com.loomcom.symon.devices.Pia;
 import com.loomcom.symon.devices.Vdp;
 import com.loomcom.symon.devices.Via6522Keyboard;
+import com.loomcom.symon.devices.PCVirtualKeyboard;
 import com.loomcom.symon.exceptions.MemoryRangeException;
 
 /**
@@ -124,6 +125,12 @@ public class SimpleMachine implements Machine {
 
     @Override
     public Via6522Keyboard getKeyboardVia()
+    {
+        return null;
+    }
+
+    @Override
+	public PCVirtualKeyboard getPCVirtualKeyboard()
     {
         return null;
     }
