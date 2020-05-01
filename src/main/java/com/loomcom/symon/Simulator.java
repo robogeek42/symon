@@ -31,6 +31,7 @@ import com.loomcom.symon.ui.Console;
 import com.loomcom.symon.ui.ConsoleTransferHandler;
 import com.loomcom.symon.devices.Acia;
 import com.loomcom.symon.devices.Via6522Keyboard;
+import com.loomcom.symon.devices.PCVirtualKeyboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,10 @@ public class Simulator {
     // Clock periods, in NS, for each speed. 0MHz, 1MHz, 2MHz, 2.684MHz, 3MHz, 4MHz, 5MHz, 6MHz, 7MHz, 8MHz.
     private static final long[] CLOCK_PERIODS = {0, 1000, 500, 371,  333, 250, 200, 167, 143, 125};
     private static final double[] CLOCK_SPEEDS = {0, 1,    2,   2.68, 3,   4,   5,   6,   7,   8};
+	
+	private static final int[] KEYBOARD_TYPES = {0, 1};
+	private static final String[] KEYBOARD_NAMES = {"VIA6522", "PC Virtual"};
+	private static final int DEFAULT_KEYBOARD = 0;
 
     // Since it is very expensive to update the UI with Swing's Event Dispatch Thread, we can't afford
     // to refresh the status view on every simulated clock cycle. Instead, we will only refresh the status view
@@ -140,6 +145,8 @@ public class Simulator {
     private long basicProgramSize;
     private int basicProgramPtr;
 
+	private int keyboard;
+
     public enum MainCommand {
         NONE,
         SELECTMACHINE
@@ -180,8 +187,13 @@ public class Simulator {
 
         basicProgramAvailable = false;
 
-        Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
-        vdpWindow.setKeyboardVia(keyboardVia);
+		if (keyboard == 0) {
+			Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
+			vdpWindow.setKeyboardVia(keyboardVia);
+		}
+		else if (keyboard == 1) {
+
+		}
     }
 
     /**
@@ -830,6 +842,21 @@ public class Simulator {
         }
     }
 
+    class SetKeyboardAction extends AbstractAction {
+        private int keyboard;
+
+        public SetKeyboardAction(int keyboard) {
+            super("Keyboard "+KEYBOARD_NAMES[keyboard], null);
+            this.keyboard = keyboard;
+            putValue(SHORT_DESCRIPTION, "Set keyboard type");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+			logger.info("Set keyboard action");
+        }
+    }
+
     class ToggleTraceWindowAction extends AbstractAction {
         public ToggleTraceWindowAction() {
             super("Trace Log", null);
@@ -1089,8 +1116,16 @@ public class Simulator {
             makeSpeedMenuItem(5, speedSubMenu, speedGroup);
             makeSpeedMenuItem(9, speedSubMenu, speedGroup);
 
+			// "keyboard" sub-menu
+			JMenu keyboardSubMenu = new JMenu("Keyboard");
+            ButtonGroup keyboardGroup = new ButtonGroup();
+		
+            makeKeyboardMenuItem(0, keyboardSubMenu, keyboardGroup);
+            makeKeyboardMenuItem(1, keyboardSubMenu, keyboardGroup);
+
             simulatorMenu.add(speedSubMenu);
             simulatorMenu.add(cpuTypeMenu);
+            simulatorMenu.add(keyboardSubMenu);
 
             // "Breakpoints"
             final JCheckBoxMenuItem showBreakpoints = new JCheckBoxMenuItem(new ToggleBreakpointWindowAction());
@@ -1134,6 +1169,16 @@ public class Simulator {
 
             JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
             item.setSelected(machine.getCpu().getBehavior() == behavior);
+            subMenu.add(item);
+            group.add(item);
+        }
+
+        private void makeKeyboardMenuItem(int keyboard, JMenu subMenu, ButtonGroup group) {
+
+            Action action = new SetKeyboardAction(keyboard);
+
+            JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
+            item.setSelected(keyboard == DEFAULT_KEYBOARD);
             subMenu.add(item);
             group.add(item);
         }

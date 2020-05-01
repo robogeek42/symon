@@ -29,6 +29,7 @@ import com.loomcom.symon.devices.DeviceChangeListener;
 import com.loomcom.symon.exceptions.MemoryAccessException;
 import com.loomcom.symon.Cpu;
 import com.loomcom.symon.devices.Via6522Keyboard;
+import com.loomcom.symon.devices.PCVirtualKeyboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
