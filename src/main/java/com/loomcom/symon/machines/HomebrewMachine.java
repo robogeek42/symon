@@ -1,3 +1,4 @@
+// vim: ts=4 sw=4 et
 /*
  * Copyright (c) 2016 Seth J. Morabito <web@loomcom.com>
  *                    Maik Merten <maikmerten@googlemail.com>
@@ -47,7 +48,7 @@ public class HomebrewMachine implements Machine {
 
     // ACIA at $7F00-$7F03
     private static final int ACIA_BASE = 0x7F00;
-	
+    
     // VIA1 (Keyboard) at $7F40-$7F4F
     private static final int PIA1_BASE = 0x7F40;
     // VIA2 at $7F80-$7F9F
@@ -56,8 +57,8 @@ public class HomebrewMachine implements Machine {
     // VDP at $7F60-$7F7F
     private static final int VDP_BASE = 0x7F60;
 
-	// PC virtual Keyboard
-	private static final int PCVKBD_BASE = 0x7FA0;
+    // PC virtual Keyboard
+    private static final int PCVKBD_BASE = 0x7FA0;
 
     // 32KB ROM at $8000-$FFFF
     private static final int ROM_BASE = 0x8000;
@@ -69,12 +70,12 @@ public class HomebrewMachine implements Machine {
     private final Cpu    cpu;
     private final Acia   acia;
     private final Via6522Keyboard pia1;
-	//private final Pia	pia1;
+    //private final Pia    pia1;
     private final Pia    pia2;
     private final Memory ram;
     private       Memory rom;
     private final Vdp    vdp;
-	private final PCVirtualKeyboard pcvkbd;
+    private final PCVirtualKeyboard pcvkbd;
 
     public HomebrewMachine(String romFile) throws Exception {
         this.bus = new Bus(BUS_BOTTOM, BUS_TOP);
@@ -87,7 +88,7 @@ public class HomebrewMachine implements Machine {
         logger.info("VIA2 at {}",this.pia2.startAddress());
         this.vdp = new Vdp(VDP_BASE, true);
 
-		this.pcvkbd = new PCVirtualKeyboard(PCVKBD_BASE);
+        this.pcvkbd = new PCVirtualKeyboard(PCVKBD_BASE);
 
         bus.addCpu(cpu);
         bus.addDevice(ram);
@@ -95,15 +96,15 @@ public class HomebrewMachine implements Machine {
         bus.addDevice(pia1);
         bus.addDevice(pia2);
         bus.addDevice(vdp);
-		bus.addDevice(pcvkbd);
+        bus.addDevice(pcvkbd);
         
-		File romImage;
+        File romImage;
         if (romFile != null) {
             romImage = new File(romFile);
-		}
-		else {
-			romImage = new File("homebrew.bin");
-		}
+        }
+        else {
+            romImage = new File("homebrew.bin");
+        }
         if (romImage.canRead()) {
             logger.info("Loading ROM image from file {}", romImage);
             this.rom = Memory.makeROM(ROM_BASE, ROM_BASE + ROM_SIZE - 1, romImage);
@@ -187,13 +188,13 @@ public class HomebrewMachine implements Machine {
     @Override
     public Via6522Keyboard getKeyboardVia()
     {
-		//return null;
+        //return null;
         return pia1;
     }
 
-	@Override
-	public PCVirtualKeyboard getPCVirtualKeyboard()
-	{
-		return pcvkbd;
-	}
+    @Override
+    public PCVirtualKeyboard getPCVirtualKeyboard()
+    {
+        return pcvkbd;
+    }
 }

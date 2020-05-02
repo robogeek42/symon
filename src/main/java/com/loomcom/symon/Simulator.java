@@ -1,4 +1,4 @@
-// vim: ts=4 expandtab
+// vim: ts=4 sw=4 et
 /*
  * Copyrighi (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
@@ -188,12 +188,18 @@ public class Simulator {
 
         basicProgramAvailable = false;
 
+        setKeyboard(keyboard);
+    }
+    
+    private void setKeyboard(int keyboard)
+    {
         if (keyboard == 0) {
             Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
             vdpWindow.setKeyboardVia(keyboardVia);
         }
         else if (keyboard == 1) {
-
+            PCVirtualKeyboard keyboardVirtual = this.machine.getPCVirtualKeyboard();
+            vdpWindow.setKeyboardVirtual(keyboardVirtual);
         }
     }
 
@@ -855,6 +861,7 @@ public class Simulator {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             logger.info("Set keyboard action");
+            setKeyboard(keyboard);
         }
     }
 

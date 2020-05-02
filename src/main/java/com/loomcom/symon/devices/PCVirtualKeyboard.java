@@ -1,3 +1,4 @@
+// vim: ts=4 sw=4 et
 package com.loomcom.symon.devices;
 
 import com.loomcom.symon.exceptions.MemoryRangeException;
@@ -14,21 +15,22 @@ public class PCVirtualKeyboard extends Device {
 
     public PCVirtualKeyboard(int address) throws MemoryRangeException {
         super(address, address + PCVK_SIZE - 1, "PC Virtual Keyboard");
-		logger.info("PC VK Initialise");
-		this.name = "PCVirtualKeyboard";
-	}
+        logger.info("PC VK Initialise");
+        this.name = "PCVirtualKeyboard";
+    }
 
     @Override
     public String toString() {
         return name;
     }
 
-	@Override
+    @Override
     public int read(int address, boolean cpuAccess) throws MemoryAccessException {
-		logger.info("Read address 0x"+Integer.toHexString(address));
+        //logger.info("Read address 0x"+Integer.toHexString(address));
         return 0;
-	}
+    }
     @Override
     public void write(int address, int data) throws MemoryAccessException {
-	}
-}	
+        logger.info("Write address 0x"+Integer.toHexString(address)+" data 0x"+Integer.toHexString(data));
+    }
+}    

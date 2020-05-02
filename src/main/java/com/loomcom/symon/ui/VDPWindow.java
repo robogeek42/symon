@@ -1,4 +1,4 @@
-// vim: ts=4 expandtab
+// vim: ts=4 et sw=4
 /*
  * Copyright (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
@@ -115,6 +115,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
     private class VideoPanel extends JPanel implements KeyListener {
 
         public Via6522Keyboard keyboardVia;
+        public PCVirtualKeyboard keyboardPCV;
 
         public VideoPanel() {
             addKeyListener(this);
@@ -167,8 +168,20 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
             int key = keyEvent.getKeyCode();
             int ext = keyEvent.getExtendedKeyCode();
             int loc = keyEvent.getKeyLocation();
-            keyboardVia.setMatrix(key, ext, loc, true);
-            keyEvent.consume();
+            if (keyboardVia != null) {
+                keyboardVia.setMatrix(key, ext, loc, true);
+                keyEvent.consume();
+                return;
+            } 
+            if (keyboardPCV != null) {
+                try {
+                    keyboardPCV.write(0, key);
+                    keyEvent.consume();
+                } catch ( MemoryAccessException e) {
+                    logger.info("Virtual Keyboard Write error "+e);
+                    return;
+                }
+            }
         }
 
         @Override
@@ -181,18 +194,36 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
             int key = keyEvent.getKeyCode();
             int ext = keyEvent.getExtendedKeyCode();
             int loc = keyEvent.getKeyLocation();
-            keyboardVia.setMatrix(key, ext, loc, false);
-            keyEvent.consume();
+            if (keyboardVia != null) {
+                keyboardVia.setMatrix(key, ext, loc, false);
+                keyEvent.consume();
+                return;
+            } 
+            if (keyboardPCV != null) {
+                try {
+                    keyboardPCV.write(0, key);
+                    keyEvent.consume();
+                } catch ( MemoryAccessException e) {
+                    logger.info("Virtual Keyboard Write error "+e);
+                    return;
+                }
+            }
         }
 
         public void setKeyboardVia(Via6522Keyboard keyboardVia) {
             this.keyboardVia = keyboardVia;
+            this.keyboardPCV = null;
+        }
+        public void setKeyboardVirtual(PCVirtualKeyboard keyboardPCV) {
+            this.keyboardPCV = keyboardPCV;
+            this.keyboardVia = null;
         }
     }
 
     private VideoPanel videoPanel;
 
     public Via6522Keyboard keyboardVia;
+    public PCVirtualKeyboard keyboardPCV;
 
     public void setKeyboardVia(Via6522Keyboard keyboardVia)
     {
@@ -202,6 +233,13 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         }
     }
 
+    public void setKeyboardVirtual(PCVirtualKeyboard keyboard)
+    {
+        this.keyboardPCV = keyboard;
+        if (videoPanel!=null) {
+            videoPanel.setKeyboardVirtual(this.keyboardPCV);
+        }
+    }
 
     public VDPWindow(Vdp vdp, int scaleX, int scaleY) throws IOException {
         vdp.registerListener(this);
@@ -240,6 +278,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         bCPUIsRunning = false;
         
         keyboardVia = null;
+        keyboardPCV = null;
     }
 
     private void setMode(Vdp vdp)
