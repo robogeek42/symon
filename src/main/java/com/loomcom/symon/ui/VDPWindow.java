@@ -571,11 +571,6 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                 sprite_list.add(new Integer(sprite));
             }
             
-            /* Clear sprite plane to transparent */
-            for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
-                spritePlane[i] = -1;
-            }
-           
             // Iterate through the list in reverse
             ListIterator<Integer> li = sprite_list.listIterator(sprite_list.size());
             while (li.hasPrevious())
@@ -712,6 +707,12 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         {
             logger.info("VRAM error "+e);
         }
+
+        /* Clear sprite plane to transparent */
+        for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
+            spritePlane[i] = -1;
+        }
+           
     }
 
     private int getPackedCol(Color c)
