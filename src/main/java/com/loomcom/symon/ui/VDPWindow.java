@@ -1,4 +1,4 @@
-// vim: ts=4
+// vim: ts=4 et sw=4
 /*
  * Copyright (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
@@ -531,11 +531,6 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 				sprite_list.add(new Integer(sprite));
 			}
 			
-			/* Clear sprite plane to transparent */
-			for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
-				spritePlane[i] = -1;
-			}
-           
             // Iterate through the list in reverse
             ListIterator<Integer> li = sprite_list.listIterator(sprite_list.size());
 			while (li.hasPrevious())
@@ -649,7 +644,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                         if (x<VDPScreenWidth)
                         {
                             //finalPixels[j*rasterWidth+i] = patternPlane[y*VDPScreenWidth+x];
-                            finalPixels[j*rasterWidth+i] = spritePlane[y*VDPScreenWidth+x] == -1 ?
+                            finalPixels[j*rasterWidth+i] = (spritePlane[y*VDPScreenWidth+x] == -1) ?
 																patternPlane[y*VDPScreenWidth+x]:
 																spritePlane[y*VDPScreenWidth+x];
                         }
@@ -672,6 +667,12 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         {
             logger.info("VRAM error "+e);
         }
+
+		/* Clear sprite plane to transparent */
+		for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
+			spritePlane[i] = -1;
+		}
+           
     }
 
     private int getPackedCol(Color c)
