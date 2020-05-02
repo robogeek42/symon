@@ -1,4 +1,4 @@
-// vim: ts=4
+// vim: ts=4, expandtab
 /*
  * Copyright (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
@@ -77,17 +77,17 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
     private Dimension dimensions;
     private Vdp vdp;
 
-	private int VDPBorderWidth;
-	private int VDPBorderHeight;
-	private int VDPCharWidth;
-	private int VDPScreenWidth;
-	private int VDPScreenHeight;
-	private int rasterWidth;
-	private int rasterHeight;
+    private int VDPBorderWidth;
+    private int VDPBorderHeight;
+    private int VDPCharWidth;
+    private int VDPScreenWidth;
+    private int VDPScreenHeight;
+    private int rasterWidth;
+    private int rasterHeight;
 
-	private int[] finalPixels;
-	private int[] patternPlane;
-	private int[] spritePlane;
+    private int[] finalPixels;
+    private int[] patternPlane;
+    private int[] spritePlane;
 
     private Color backdropColor;
     private int VDPMode;
@@ -126,7 +126,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         @Override
         public void paintComponent(Graphics g) {
             computeFinalPixels();
-			image.getRaster().setDataElements(0,0,rasterWidth, rasterHeight, finalPixels); 
+            image.getRaster().setDataElements(0,0,rasterWidth, rasterHeight, finalPixels); 
             Graphics2D g2d = (Graphics2D) g;
             if (shouldScale) {
                 g2d.scale(scaleX, scaleY);
@@ -144,46 +144,46 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
             return dimensions;
         }
 
-		@Override
-		/**
-		 * Handle a Key Typed event.
-		 *
-		 * @param keyEvent The key event.
-		 */
-		public void keyTyped(KeyEvent keyEvent) {
-			//char keyTyped = keyEvent.getKeyChar();
-			//logger.info(""+keyTyped+"");
+        @Override
+        /**
+         * Handle a Key Typed event.
+         *
+         * @param keyEvent The key event.
+         */
+        public void keyTyped(KeyEvent keyEvent) {
+            //char keyTyped = keyEvent.getKeyChar();
+            //logger.info(""+keyTyped+"");
 
-			keyEvent.consume();
-		}
+            keyEvent.consume();
+        }
 
-		@Override
-		/**
-		 * Handle a Key Press event.
-		 *
-		 * @param keyEvent The key event.
-		 */
-		public void keyPressed(KeyEvent keyEvent) {
-			int key = keyEvent.getKeyCode();
-			int ext = keyEvent.getExtendedKeyCode();
-			int loc = keyEvent.getKeyLocation();
+        @Override
+        /**
+         * Handle a Key Press event.
+         *
+         * @param keyEvent The key event.
+         */
+        public void keyPressed(KeyEvent keyEvent) {
+            int key = keyEvent.getKeyCode();
+            int ext = keyEvent.getExtendedKeyCode();
+            int loc = keyEvent.getKeyLocation();
             keyboardVia.setMatrix(key, ext, loc, true);
-			keyEvent.consume();
-		}
+            keyEvent.consume();
+        }
 
-		@Override
-		/**
-		 * Handle a key release event.
-		 *
-		 * @param keyEvent The key event.
-		 */
-		public void keyReleased(KeyEvent keyEvent) {
-			int key = keyEvent.getKeyCode();
-			int ext = keyEvent.getExtendedKeyCode();
-			int loc = keyEvent.getKeyLocation();
+        @Override
+        /**
+         * Handle a key release event.
+         *
+         * @param keyEvent The key event.
+         */
+        public void keyReleased(KeyEvent keyEvent) {
+            int key = keyEvent.getKeyCode();
+            int ext = keyEvent.getExtendedKeyCode();
+            int loc = keyEvent.getKeyLocation();
             keyboardVia.setMatrix(key, ext, loc, false);
-			keyEvent.consume();
-		}
+            keyEvent.consume();
+        }
 
         public void setKeyboardVia(Via6522Keyboard keyboardVia) {
             this.keyboardVia = keyboardVia;
@@ -210,19 +210,19 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         this.scaleX = scaleX;
         this.scaleY = scaleY;
         this.shouldScale = (scaleX > 1 || scaleY > 1);
-		this.VDPBorderWidth = 8;
-		this.VDPBorderHeight = 8;
-		this.VDPScreenWidth = 256;
-		this.VDPScreenHeight = 192;
+        this.VDPBorderWidth = 8;
+        this.VDPBorderHeight = 8;
+        this.VDPScreenWidth = 256;
+        this.VDPScreenHeight = 192;
         this.VDPCharWidth = 8;
 
         this.rasterWidth = VDPBorderWidth*2 + VDPScreenWidth;
         this.rasterHeight = VDPBorderHeight*2 + VDPScreenHeight;
 
-		this.finalPixels = new int[rasterWidth*rasterHeight];
+        this.finalPixels = new int[rasterWidth*rasterHeight];
         this.backdropColor = vdp.getBackdropColor();
-		this.patternPlane = new int[VDPScreenWidth*VDPScreenHeight];
-		this.spritePlane = new int[VDPScreenWidth*VDPScreenHeight];
+        this.patternPlane = new int[VDPScreenWidth*VDPScreenHeight];
+        this.spritePlane = new int[VDPScreenWidth*VDPScreenHeight];
         
         setMode(vdp);
 
@@ -476,44 +476,44 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
         // Modes 0,2,4 (not text mode)
         if (bSpritesEnabled)
         {
-			int blocks = bLargeSprites?4:1;
-			int mag = bSpriteMagnify?2:1;
+            int blocks = bLargeSprites?4:1;
+            int mag = bSpriteMagnify?2:1;
             int spriteSize = bLargeSprites?16:8;
 
-			/* Debug - print sprite info
-			logger.info("Mode: "+vdp.getVDPMode());
-			// dump sprite block
-			int os = VAddr_SpriteAttribTable;
-			String str = "SAB:";
-			for (int i =0; i < 128; i++)
-			{
-				int r = vdp.readVRAM(os+i);
-				if (i%4 == 0) { str += String.format("%d[",i/4); }
-				str += String.format("%02X", r);
-				if (i%4 == 3) { str += "] "; }
-			}
-			logger.info(str);
-			*/
+            /* Debug - print sprite info
+            logger.info("Mode: "+vdp.getVDPMode());
+            // dump sprite block
+            int os = VAddr_SpriteAttribTable;
+            String str = "SAB:";
+            for (int i =0; i < 128; i++)
+            {
+                int r = vdp.readVRAM(os+i);
+                if (i%4 == 0) { str += String.format("%d[",i/4); }
+                str += String.format("%02X", r);
+                if (i%4 == 3) { str += "] "; }
+            }
+            logger.info(str);
+            */
 
-			// sprites are processed from 0 -> 31 and if vpos==0xD00 is observed, sprite processing is stopped. 
-			// But, sprites have to be draw back to front (31 -> 0) to make hidden object work.
-			// So, save sprites to be drawn in order in a list.
-			ArrayList<Integer> sprite_list = new ArrayList<>();
+            // sprites are processed from 0 -> 31 and if vpos==0xD00 is observed, sprite processing is stopped. 
+            // But, sprites have to be draw back to front (31 -> 0) to make hidden object work.
+            // So, save sprites to be drawn in order in a list.
+            ArrayList<Integer> sprite_list = new ArrayList<>();
             // Only 4 sprites per line, Highest priority ones first
             int[] sprites_per_line = new int[256+32]; 
             int[] fifth_sprite = new int[256+32];
 
-			// for each sprite in SAB (stop if any vertical pos == 0xD0)
-			for (int sprite =0; sprite < 32; sprite++)
-			{
-				int SABoffset = VAddr_SpriteAttribTable + sprite*4;
-				int vpos 		= vdp.readVRAM(SABoffset);
-				
-				// special value in vpos means stop processing sprites
-				if (vpos == 0xD0) break;
+            // for each sprite in SAB (stop if any vertical pos == 0xD0)
+            for (int sprite =0; sprite < 32; sprite++)
+            {
+                int SABoffset = VAddr_SpriteAttribTable + sprite*4;
+                int vpos         = vdp.readVRAM(SABoffset);
+                
+                // special value in vpos means stop processing sprites
+                if (vpos == 0xD0) break;
 
                 int vpos_adjusted = getVPos(sprite);
-				int setFifthSprite = 0;
+                int setFifthSprite = 0;
 
                 for (int i=0;i<(spriteSize*mag+1);i++)
                 {
@@ -521,94 +521,94 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                     if (sprites_per_line[vpos_adjusted+32+i] >4)
                     {
                         fifth_sprite[vpos_adjusted+32+i] = sprite;
-						if (setFifthSprite == 0)
-						{
-							vdp.setFifthSprite(sprite);
-							//logger.info("FIFTH Sprite: "+sprite+" VPos "+vpos_adjusted+"");
-							setFifthSprite = sprite;
-						}
+                        if (setFifthSprite == 0)
+                        {
+                            vdp.setFifthSprite(sprite);
+                            //logger.info("FIFTH Sprite: "+sprite+" VPos "+vpos_adjusted+"");
+                            setFifthSprite = sprite;
+                        }
                     }
                 }
-				sprite_list.add(new Integer(sprite));
-			}
-			
-			/* Clear sprite plane to transparent */
-			for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
-				spritePlane[i] = -1;
-			}
+                sprite_list.add(new Integer(sprite));
+            }
+            
+            /* Clear sprite plane to transparent */
+            for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
+                spritePlane[i] = -1;
+            }
            
             // Iterate through the list in reverse
             ListIterator<Integer> li = sprite_list.listIterator(sprite_list.size());
-			while (li.hasPrevious())
-			{
+            while (li.hasPrevious())
+            {
                 Integer I = li.previous();
                 int sprite = I.intValue();
 
-				int SABoffset = VAddr_SpriteAttribTable + sprite*4;
+                int SABoffset = VAddr_SpriteAttribTable + sprite*4;
                 int vpos        = getVPos(sprite);
-				int hpos 		= vdp.readVRAM(SABoffset + 1);
-				int pattern 	= vdp.readVRAM(SABoffset + 2);
-				int col 		= vdp.readVRAM(SABoffset + 3) & 0x0F;
-				Color color 	= vdp.convertColorGetBG(col); // use GetBG function because colour is in low nibble
-				int packCol 	= getPackedCol(color);
-				int earlyclock 	= vdp.readVRAM(SABoffset + 3) & 0x80;
+                int hpos         = vdp.readVRAM(SABoffset + 1);
+                int pattern     = vdp.readVRAM(SABoffset + 2);
+                int col         = vdp.readVRAM(SABoffset + 3) & 0x0F;
+                Color color     = vdp.convertColorGetBG(col); // use GetBG function because colour is in low nibble
+                int packCol     = getPackedCol(color);
+                int earlyclock     = vdp.readVRAM(SABoffset + 3) & 0x80;
 
-				// EarlyClock bit shifts sprite to left by 32 pixels
+                // EarlyClock bit shifts sprite to left by 32 pixels
                 if (earlyclock>0) {
                     hpos -= 32;
                 }
-				
+                
                 //logger.info("Sprite: "+sprite+" Pos "+hpos+","+vpos+
                 //        " pattern "+pattern+" color "+col+" 0x"+Integer.toHexString(packCol)+
                 //        " Early "+((earlyclock>0)?"T":"F")+
                 //        " PAddr 0x"+Integer.toHexString(VAddr_SpritePatternTable + pattern*8)+
                 //        ""+(bLargeSprites?" Large":"")+(bSpriteMagnify?" Magnify":""));
 
-				for (int block=0; block < blocks; block++)
-				{
-					int SPToffset	= VAddr_SpritePatternTable + (pattern/blocks)*8*blocks +block*8;
+                for (int block=0; block < blocks; block++)
+                {
+                    int SPToffset    = VAddr_SpritePatternTable + (pattern/blocks)*8*blocks +block*8;
 
-					int x = hpos;
-					int y = vpos;
+                    int x = hpos;
+                    int y = vpos;
 
-					/* [ Block0 ] [ Block2 ]
-					 * [ Block1 ] [ Block3 ] */
-					x += (block&2)*4*mag;
-					y += (block&1)*8*mag;
+                    /* [ Block0 ] [ Block2 ]
+                     * [ Block1 ] [ Block3 ] */
+                    x += (block&2)*4*mag;
+                    y += (block&1)*8*mag;
 
-					//logger.info("Sprite: "+sprite+" Pos "+x+","+y+" PAddr 0x"+Integer.toHexString(SPToffset));
+                    //logger.info("Sprite: "+sprite+" Pos "+x+","+y+" PAddr 0x"+Integer.toHexString(SPToffset));
 
-					for (int row = 0; row < 8; row++)
-					{
-						if ((y+row*mag)>=0 && (y+row*mag)<192) // dont draw pixels outside main pattern plane
-						{
-							int ch = vdp.readVRAM(SPToffset + row);
-							//logger.info("--- row "+row+": 0x"+Integer.toHexString(ch) + " fifth "+fifth_sprite[32+y+row*mag]);
-							for (int p = 0; p < 8; p++)
-							{
-								if ( (x+p*mag)>=0 && (x+p*mag)<VDPScreenWidth) // dont draw pixels outside main pattern plane
-								{
-									int b = (ch << p) & 0x80;
-									if (b>0) // only set where pixel==1, otherwise it is transparent
-									{
-										int offset = (y+row*mag)*VDPScreenWidth + (x + p*mag);
+                    for (int row = 0; row < 8; row++)
+                    {
+                        if ((y+row*mag)>=0 && (y+row*mag)<192) // dont draw pixels outside main pattern plane
+                        {
+                            int ch = vdp.readVRAM(SPToffset + row);
+                            //logger.info("--- row "+row+": 0x"+Integer.toHexString(ch) + " fifth "+fifth_sprite[32+y+row*mag]);
+                            for (int p = 0; p < 8; p++)
+                            {
+                                if ( (x+p*mag)>=0 && (x+p*mag)<VDPScreenWidth) // dont draw pixels outside main pattern plane
+                                {
+                                    int b = (ch << p) & 0x80;
+                                    if (b>0) // only set where pixel==1, otherwise it is transparent
+                                    {
+                                        int offset = (y+row*mag)*VDPScreenWidth + (x + p*mag);
                                         if ((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
                                         {
-											//logger.info("     * p"+p+" SP offset "+offset+ " Cur " + Integer.toHexString(spritePlane[offset]) + " -> "+Integer.toHexString(packCol));
-											if (spritePlane[offset] != -1)
-											{
-												vdp.setCoincidenceFlag();
-												//logger.info("COLLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
-											}
+                                            //logger.info("     * p"+p+" SP offset "+offset+ " Cur " + Integer.toHexString(spritePlane[offset]) + " -> "+Integer.toHexString(packCol));
+                                            if (spritePlane[offset] != -1)
+                                            {
+                                                vdp.setCoincidenceFlag();
+                                                //logger.info("COLLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
+                                            }
                                             spritePlane[offset] = packCol;
 
                                             if (bSpriteMagnify)
 
                                             {
-												if (spritePlane[offset+1] >= 0)
-												{
-													vdp.setCoincidenceFlag();
-												}
+                                                if (spritePlane[offset+1] >= 0)
+                                                {
+                                                    vdp.setCoincidenceFlag();
+                                                }
                                                 spritePlane[offset+1] = packCol;
                                             }
                                         }
@@ -616,31 +616,31 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                                         {
                                             if (bSpriteMagnify)
                                             {
-												if (spritePlane[offset+VDPScreenWidth] >= 0)
-												{
-													vdp.setCoincidenceFlag();
-												}
+                                                if (spritePlane[offset+VDPScreenWidth] >= 0)
+                                                {
+                                                    vdp.setCoincidenceFlag();
+                                                }
                                                 spritePlane[offset+VDPScreenWidth] = packCol;
-												if (spritePlane[offset+VDPScreenWidth+1] >= 0)
-												{
-													vdp.setCoincidenceFlag();
-												}
+                                                if (spritePlane[offset+VDPScreenWidth+1] >= 0)
+                                                {
+                                                    vdp.setCoincidenceFlag();
+                                                }
                                                 spritePlane[offset+VDPScreenWidth+1] = packCol;
                                             }
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         int colpackedtst =  getPackedCol(new Color(0xff, 0x00, 0x00, 0xff));
         int packColBG =  getPackedCol(backdropColor);
-		for (int i=0;i<rasterWidth;i++) {
-			for (int j=0;j<rasterHeight;j++) {
+        for (int i=0;i<rasterWidth;i++) {
+            for (int j=0;j<rasterHeight;j++) {
                 if (i >= VDPBorderWidth && i < (rasterWidth-VDPBorderWidth) &&
                     j >= VDPBorderWidth && j < (rasterHeight-VDPBorderWidth)) 
                 {
@@ -651,8 +651,8 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                         {
                             //finalPixels[j*rasterWidth+i] = patternPlane[y*VDPScreenWidth+x];
                             finalPixels[j*rasterWidth+i] = spritePlane[y*VDPScreenWidth+x] == -1 ?
-																patternPlane[y*VDPScreenWidth+x]:
-																spritePlane[y*VDPScreenWidth+x];
+                                                                patternPlane[y*VDPScreenWidth+x]:
+                                                                spritePlane[y*VDPScreenWidth+x];
                         }
                         else
                         {
@@ -667,8 +667,8 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                     // outside border
                     finalPixels[j*rasterWidth+i] = packColBG;
                 }
-			}
-		}
+            }
+        }
         } catch (MemoryAccessException e)
         {
             logger.info("VRAM error "+e);
