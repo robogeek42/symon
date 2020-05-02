@@ -1,4 +1,4 @@
-// vim: ts=4, expandtab
+// vim: ts=4 expandtab
 /*
  * Copyright (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
