@@ -1,3 +1,4 @@
+// vim: ts=4 expandtab
 /*
  * Copyrighi (c) 2016 Seth J. Morabito <web@loomcom.com>
  *
@@ -64,10 +65,10 @@ public class Simulator {
     // Clock periods, in NS, for each speed. 0MHz, 1MHz, 2MHz, 2.684MHz, 3MHz, 4MHz, 5MHz, 6MHz, 7MHz, 8MHz.
     private static final long[] CLOCK_PERIODS = {0, 1000, 500, 371,  333, 250, 200, 167, 143, 125};
     private static final double[] CLOCK_SPEEDS = {0, 1,    2,   2.68, 3,   4,   5,   6,   7,   8};
-	
-	private static final int[] KEYBOARD_TYPES = {0, 1};
-	private static final String[] KEYBOARD_NAMES = {"VIA6522", "PC Virtual"};
-	private static final int DEFAULT_KEYBOARD = 0;
+    
+    private static final int[] KEYBOARD_TYPES = {0, 1};
+    private static final String[] KEYBOARD_NAMES = {"VIA6522", "PC Virtual"};
+    private static final int DEFAULT_KEYBOARD = 0;
 
     // Since it is very expensive to update the UI with Swing's Event Dispatch Thread, we can't afford
     // to refresh the status view on every simulated clock cycle. Instead, we will only refresh the status view
@@ -139,13 +140,13 @@ public class Simulator {
     private MainCommand command = MainCommand.NONE;
 
     private TransferActionListener transferActionListener;
-	private ConsoleTransferHandler consoleTH;
+    private ConsoleTransferHandler consoleTH;
     private byte[] basicProgram;
     private boolean basicProgramAvailable;
     private long basicProgramSize;
     private int basicProgramPtr;
 
-	private int keyboard;
+    private int keyboard;
 
     public enum MainCommand {
         NONE,
@@ -187,13 +188,13 @@ public class Simulator {
 
         basicProgramAvailable = false;
 
-		if (keyboard == 0) {
-			Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
-			vdpWindow.setKeyboardVia(keyboardVia);
-		}
-		else if (keyboard == 1) {
+        if (keyboard == 0) {
+            Via6522Keyboard keyboardVia = this.machine.getKeyboardVia();
+            vdpWindow.setKeyboardVia(keyboardVia);
+        }
+        else if (keyboard == 1) {
 
-		}
+        }
     }
 
     /**
@@ -213,7 +214,7 @@ public class Simulator {
 
         this.consoleTH = new ConsoleTransferHandler();
         this.console.setTransferHandler(consoleTH);
-		setMappings(this.console);
+        setMappings(this.console);
         transferActionListener = new TransferActionListener();
 
         // File Chooser
@@ -230,7 +231,7 @@ public class Simulator {
 
         buttonContainer.setLayout(new FlowLayout());
 
-		reloadROMButton = new JButton("Reload ROM");
+        reloadROMButton = new JButton("Reload ROM");
         runStopButton = new JButton("Run");
         stepButton = new JButton("Step");
         JButton softResetButton = new JButton("Soft Reset");
@@ -315,31 +316,31 @@ public class Simulator {
                     Simulator.this.handleStop();
                 }
                 //loadROM();
-				try {
-					// Load the new ROM image
-					File romImage = new File("homebrew.bin");
-					Memory rom = Memory.makeROM(machine.getRomBase(), machine.getRomBase() + machine.getRomSize() - 1, romImage);
-					machine.setRom(rom);
+                try {
+                    // Load the new ROM image
+                    File romImage = new File("homebrew.bin");
+                    Memory rom = Memory.makeROM(machine.getRomBase(), machine.getRomBase() + machine.getRomSize() - 1, romImage);
+                    machine.setRom(rom);
 
-					// Now, reset
-					machine.getCpu().reset();
+                    // Now, reset
+                    machine.getCpu().reset();
 
-					updateVisibleState();
+                    updateVisibleState();
 
-					// Refresh breakpoints to show new memory contents.
-					breakpoints.refresh();
-				} catch (IOException ex) {
-					logger.error("Unable to read ROM file: {}", ex.getMessage());
-					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-				} catch (MemoryRangeException ex) {
-					logger.error("Memory range error while loading ROM file: {}", ex.getMessage());
-					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-				} catch (MemoryAccessException ex) {
-					logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
-					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
-				}
+                    // Refresh breakpoints to show new memory contents.
+                    breakpoints.refresh();
+                } catch (IOException ex) {
+                    logger.error("Unable to read ROM file: {}", ex.getMessage());
+                    JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+                } catch (MemoryRangeException ex) {
+                    logger.error("Memory range error while loading ROM file: {}", ex.getMessage());
+                    JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+                } catch (MemoryAccessException ex) {
+                    logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
+                    JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
+                }
 
-				Simulator.this.handleStart();
+                Simulator.this.handleStart();
             }
         });
 
@@ -452,7 +453,7 @@ public class Simulator {
             if (acia != null) {
                 // key press from console ...
                 if (console.hasInput() && !acia.hasRxChar()) {
-					acia.rxWrite((int) console.readInputChar());
+                    acia.rxWrite((int) console.readInputChar());
                 }
                 // ... or pasted program
                 if (basicProgramAvailable && !acia.hasRxChar()) {
@@ -519,7 +520,7 @@ public class Simulator {
         updateVisibleState();
     }
 
-	private void loadROM() {
+    private void loadROM() {
             try {
                 int retVal = fileChooser.showOpenDialog(mainWindow);
                 if (retVal == JFileChooser.APPROVE_OPTION) {
@@ -564,7 +565,7 @@ public class Simulator {
                 logger.error("Memory access error while loading ROM file: {}", ex.getMessage());
                 JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Failure", JOptionPane.ERROR_MESSAGE);
             }
-	}
+    }
 
     /**
      * The main run thread.
@@ -709,15 +710,15 @@ public class Simulator {
         }
     }
 
-	class PasteFromFileAction extends AbstractAction {
-		public PasteFromFileAction() {
+    class PasteFromFileAction extends AbstractAction {
+        public PasteFromFileAction() {
             super("Paste from file", null);
             putValue(SHORT_DESCRIPTION, "Paste from file");
-		}
+        }
         public void actionPerformed(ActionEvent actionEvent) {
             DoPasteFromFile();
-		}
-	}
+        }
+    }
 
     class LoadRomAction extends AbstractAction {
         public LoadRomAction() {
@@ -727,7 +728,7 @@ public class Simulator {
         }
 
         public void actionPerformed(ActionEvent actionEvent) {
-			loadROM();
+            loadROM();
         }
     }
 
@@ -853,7 +854,7 @@ public class Simulator {
 
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-			logger.info("Set keyboard action");
+            logger.info("Set keyboard action");
         }
     }
 
@@ -948,8 +949,8 @@ public class Simulator {
         // Menu Items
         private JMenuItem loadProgramItem;
         private JMenuItem loadRomItem;
-		private JMenuItem pasteItem;
-		private JMenuItem filepasteItem;
+        private JMenuItem pasteItem;
+        private JMenuItem filepasteItem;
 
         /**
          * Create a new SimulatorMenu instance.
@@ -1004,25 +1005,25 @@ public class Simulator {
 
             add(fileMenu);
 
-			/*
-			 * Edit Menu
-			 */
-			JMenu editMenu = new JMenu("Edit");
-			//pasteItem = new JMenuItem(new PasteAction());
-			pasteItem = new JMenuItem("Paste");
-			pasteItem.setActionCommand((String)consoleTH.getPasteAction().
-					 getValue(Action.NAME));
-			pasteItem.addActionListener(transferActionListener);
-			pasteItem.setAccelerator(
-			  KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
-			pasteItem.setMnemonic(KeyEvent.VK_P);
-			editMenu.add(pasteItem);
+            /*
+             * Edit Menu
+             */
+            JMenu editMenu = new JMenu("Edit");
+            //pasteItem = new JMenuItem(new PasteAction());
+            pasteItem = new JMenuItem("Paste");
+            pasteItem.setActionCommand((String)consoleTH.getPasteAction().
+                     getValue(Action.NAME));
+            pasteItem.addActionListener(transferActionListener);
+            pasteItem.setAccelerator(
+              KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
+            pasteItem.setMnemonic(KeyEvent.VK_P);
+            editMenu.add(pasteItem);
 
             filepasteItem = new JMenuItem(new PasteFromFileAction());
-			editMenu.add(filepasteItem);
+            editMenu.add(filepasteItem);
 
-			add(editMenu);
-			
+            add(editMenu);
+            
             /*
              * View Menu
              */
@@ -1082,7 +1083,7 @@ public class Simulator {
                         showVdpWindow.setSelected(false);
                     }
                 });
-				showVdpWindow.setSelected(true);
+                showVdpWindow.setSelected(true);
                 viewMenu.add(showVdpWindow);
             }
 
@@ -1116,10 +1117,10 @@ public class Simulator {
             makeSpeedMenuItem(5, speedSubMenu, speedGroup);
             makeSpeedMenuItem(9, speedSubMenu, speedGroup);
 
-			// "keyboard" sub-menu
-			JMenu keyboardSubMenu = new JMenu("Keyboard");
+            // "keyboard" sub-menu
+            JMenu keyboardSubMenu = new JMenu("Keyboard");
             ButtonGroup keyboardGroup = new ButtonGroup();
-		
+        
             makeKeyboardMenuItem(0, keyboardSubMenu, keyboardGroup);
             makeKeyboardMenuItem(1, keyboardSubMenu, keyboardGroup);
 
@@ -1227,24 +1228,24 @@ public class Simulator {
                     FileInputStream fis = new FileInputStream(f);
                     BufferedInputStream bis = new BufferedInputStream(fis);
                     DataInputStream dis = new DataInputStream(bis);
-					// LF = 0x0A CR=0x0D. Dos has CR-LF, Unix has LF
-					// The basic interpreter expects Dos (i.e. both), so Add CR if needed.
-					boolean bIsUnixFormat=true;
+                    // LF = 0x0A CR=0x0D. Dos has CR-LF, Unix has LF
+                    // The basic interpreter expects Dos (i.e. both), so Add CR if needed.
+                    boolean bIsUnixFormat=true;
                     while (dis.available() != 0) {
-						byte b = dis.readByte();
-						if (bIsUnixFormat && b == 0x0D)
-						{
-							bIsUnixFormat = false;
-						}
-						if(bIsUnixFormat && b == 0x0A )
-						{
+                        byte b = dis.readByte();
+                        if (bIsUnixFormat && b == 0x0D)
+                        {
+                            bIsUnixFormat = false;
+                        }
+                        if(bIsUnixFormat && b == 0x0A )
+                        {
                             basicProgram[i++] = 0x0D;
                             basicProgram[i++] = 0x0A;
                         }
-						else
-						{
-							basicProgram[i++] = b;
-						}
+                        else
+                        {
+                            basicProgram[i++] = b;
+                        }
                     }
                     basicProgramSize = i;
                     basicProgramAvailable = true;
