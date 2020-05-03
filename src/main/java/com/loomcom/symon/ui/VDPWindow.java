@@ -168,19 +168,17 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
             int key = keyEvent.getKeyCode();
             int ext = keyEvent.getExtendedKeyCode();
             int loc = keyEvent.getKeyLocation();
+            char ch = keyEvent.getKeyChar();
+            int mods = keyEvent.getModifiers();
+
             if (keyboardVia != null) {
                 keyboardVia.setMatrix(key, ext, loc, true);
                 keyEvent.consume();
                 return;
             } 
             if (keyboardPCV != null) {
-                try {
-                    keyboardPCV.write(0, key);
-                    keyEvent.consume();
-                } catch ( MemoryAccessException e) {
-                    logger.info("Virtual Keyboard Write error "+e);
-                    return;
-                }
+                keyboardPCV.newkey(ch, key, ext, loc, mods, true);
+                keyEvent.consume();
             }
         }
 
@@ -194,19 +192,17 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
             int key = keyEvent.getKeyCode();
             int ext = keyEvent.getExtendedKeyCode();
             int loc = keyEvent.getKeyLocation();
+            char ch = keyEvent.getKeyChar();
+            int mods = keyEvent.getModifiers();
+
             if (keyboardVia != null) {
                 keyboardVia.setMatrix(key, ext, loc, false);
                 keyEvent.consume();
                 return;
             } 
             if (keyboardPCV != null) {
-                try {
-                    keyboardPCV.write(0, key);
-                    keyEvent.consume();
-                } catch ( MemoryAccessException e) {
-                    logger.info("Virtual Keyboard Write error "+e);
-                    return;
-                }
+                keyboardPCV.newkey(ch, key, ext, loc, mods, false);
+                keyEvent.consume();
             }
         }
 
