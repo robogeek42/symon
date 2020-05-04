@@ -68,7 +68,7 @@ public class Simulator {
     
     private static final int[] KEYBOARD_TYPES = {0, 1};
     private static final String[] KEYBOARD_NAMES = {"VIA6522", "PC Virtual"};
-    private static final int DEFAULT_KEYBOARD = 0;
+    private static final int DEFAULT_KEYBOARD = 1;
 
     // Since it is very expensive to update the UI with Swing's Event Dispatch Thread, we can't afford
     // to refresh the status view on every simulated clock cycle. Instead, we will only refresh the status view
@@ -188,7 +188,7 @@ public class Simulator {
 
         basicProgramAvailable = false;
 
-        setKeyboard(keyboard);
+        setKeyboard(DEFAULT_KEYBOARD);
     }
     
     private void setKeyboard(int keyboard)

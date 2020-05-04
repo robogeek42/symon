@@ -39,12 +39,12 @@ public class PCVirtualKeyboard extends Device {
     }
 
     public void newkey(char ch, int key, int ext, int loc, int mods, boolean pressed){
-        logger.info("Key: "+ch+" 0x"+Integer.toHexString(key) +
+        logger.info("Key: "+ch+"(0x"+Integer.toHexString(ch)+") 0x"+Integer.toHexString(key) +
                     " Ext: 0x"+Integer.toHexString(ext) +
                     " Loc: 0x"+Integer.toHexString(loc) +
                     " Mods: 0x"+Integer.toHexString(mods) +
                     (pressed ? " Pressed":"Released"));
-        char trch = translate(ch); 
+        char trch = translate(ch, key); 
         try {
             if (pressed)
             {
@@ -61,11 +61,19 @@ public class PCVirtualKeyboard extends Device {
         }
     }
 
-    private char translate(char ch) {
+    private char translate(char ch, int key) {
         switch (ch)
         {
             case 0x0A: return 0x0D;
-            default: return ch;
         }
+        switch (key)
+        {
+            case KeyEvent.VK_LEFT:      return 0xB0; 
+            case KeyEvent.VK_DOWN:      return 0xB1;
+            case KeyEvent.VK_RIGHT:     return 0xB2;
+            case KeyEvent.VK_UP:        return 0xB3;
+            case KeyEvent.VK_DELETE:    return 0xB4;
+        }
+        return ch;
     }
 }    
