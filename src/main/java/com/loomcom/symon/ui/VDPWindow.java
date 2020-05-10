@@ -109,6 +109,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
     public boolean bCPUIsRunning;
     public static Cpu cpu;
 
+    private static final int TRANSPARENT = -2;
     /**
      * A panel representing the composite video output, with fast Graphics2D painting.
      */
@@ -625,7 +626,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                                         if ((fifth_sprite[32+y+row*mag]==0) || sprite<fifth_sprite[32+y+row*mag])
                                         {
                                             //logger.info("     * p"+p+" SP offset "+offset+ " Cur " + Integer.toHexString(spritePlane[offset]) + " -> "+Integer.toHexString(packCol));
-                                            if (spritePlane[offset] != -1)
+                                            if (spritePlane[offset] != TRANSPARENT)
                                             {
                                                 vdp.setCoincidenceFlag();
                                                 //logger.info("COLLISION: Sprite: "+sprite+" Pos "+x+","+y+"");
@@ -635,7 +636,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                                             if (bSpriteMagnify)
 
                                             {
-                                                if (spritePlane[offset+1] >= 0)
+                                                if (spritePlane[offset+1] != TRANSPARENT)
                                                 {
                                                     vdp.setCoincidenceFlag();
                                                 }
@@ -646,12 +647,12 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                                         {
                                             if (bSpriteMagnify)
                                             {
-                                                if (spritePlane[offset+VDPScreenWidth] >= 0)
+                                                if (spritePlane[offset+VDPScreenWidth] != TRANSPARENT)
                                                 {
                                                     vdp.setCoincidenceFlag();
                                                 }
                                                 spritePlane[offset+VDPScreenWidth] = packCol;
-                                                if (spritePlane[offset+VDPScreenWidth+1] >= 0)
+                                                if (spritePlane[offset+VDPScreenWidth+1] != TRANSPARENT)
                                                 {
                                                     vdp.setCoincidenceFlag();
                                                 }
@@ -680,7 +681,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
                         if (x<VDPScreenWidth)
                         {
                             //finalPixels[j*rasterWidth+i] = patternPlane[y*VDPScreenWidth+x];
-                            finalPixels[j*rasterWidth+i] = spritePlane[y*VDPScreenWidth+x] == -1 ?
+                            finalPixels[j*rasterWidth+i] = spritePlane[y*VDPScreenWidth+x] == TRANSPARENT ?
                                                                 patternPlane[y*VDPScreenWidth+x]:
                                                                 spritePlane[y*VDPScreenWidth+x];
                         }
@@ -706,7 +707,7 @@ public class VDPWindow extends JFrame implements DeviceChangeListener {
 
         /* Clear sprite plane to transparent */
         for (int i=0; i<VDPScreenWidth*VDPScreenHeight;i++) {
-            spritePlane[i] = -1;
+            spritePlane[i] = TRANSPARENT;
         }
            
     }
