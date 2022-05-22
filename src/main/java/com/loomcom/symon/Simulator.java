@@ -119,6 +119,11 @@ public class Simulator {
 
     private final BreakpointsWindow breakpointsWindow;
 
+    /*
+     * Trace view of debugger
+     */
+    private final TraceView traceView;
+
     private SimulatorMenu menuBar;
 
     private RunLoop runLoop;
@@ -173,6 +178,7 @@ public class Simulator {
         this.traceLog = new TraceLog();
         this.memoryWindow = new MemoryWindow(machine.getBus());
         this.breakpointsWindow = new BreakpointsWindow(breakpoints, mainWindow);
+        this.traceView = new TraceView();
 
         if (machine.getCrtc() != null) {
             videoWindow = new VideoWindow(machine.getCrtc(), 2, 2);
@@ -630,6 +636,11 @@ public class Simulator {
                     if (traceLog.isVisible()) {
                         traceLog.refresh();
                     }
+                    if (traceView.isVisible()) {
+                    	int pc = machine.getCpu().getProgramCounter();
+                    	traceView.setPC(pc);
+                        traceView.refresh();
+                    }
                     menuBar.simulatorDidStop();
                     traceLog.simulatorDidStop();
                 }
@@ -900,6 +911,24 @@ public class Simulator {
         }
     }
 
+    class ToggleTraceViewWindowAction extends AbstractAction {
+        public ToggleTraceViewWindowAction() {
+            super("Trace View", null);
+            putValue(SHORT_DESCRIPTION, "Show or Hide the Debug Trace View Window");
+        }
+
+        public void actionPerformed(ActionEvent actionEvent) {
+            synchronized (traceView) {
+                if (traceView.isVisible()) {
+                    traceView.setVisible(false);
+                } else {
+                    traceView.refresh();
+                    traceView.setVisible(true);
+                }
+            }
+        }
+    }
+
     class ToggleVideoWindowAction extends AbstractAction {
         public ToggleVideoWindowAction() {
             super("Video Window", null);
@@ -1071,6 +1100,16 @@ public class Simulator {
             });
             viewMenu.add(showMemoryTable);
 
+            final JCheckBoxMenuItem showTraceView = new JCheckBoxMenuItem(new ToggleTraceViewWindowAction());
+            // Un-check the menu item if the user closes the window directly
+            traceView.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    showTraceView.setSelected(false);
+                }
+            });
+            viewMenu.add(showTraceView);
+
             if (videoWindow != null) {
                 final JCheckBoxMenuItem showVideoWindow = new JCheckBoxMenuItem(new ToggleVideoWindowAction());
                 videoWindow.addWindowListener(new WindowAdapter() {
@@ -1203,6 +1242,11 @@ public class Simulator {
                 memoryWindow.updateState();
                 if (traceLog.shouldUpdate()) {
                     traceLog.refresh();
+                }
+                if (traceView.shouldUpdate()) {
+                	int pc = machine.getCpu().getProgramCounter();
+                	traceView.setPC(pc);
+                    traceView.refresh();
                 }
             }
         });
