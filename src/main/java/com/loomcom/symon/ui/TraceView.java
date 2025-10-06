@@ -74,6 +74,8 @@ public class TraceView extends JFrame {
     	String h = "00" + Integer.toHexString(this.PC).toUpperCase();
     	this.line_start = editorPane.getText().indexOf(h);
     	this.line_end = editorPane.getText().indexOf('\n', this.line_start);
+
+        if (this.line_start < 0) this.line_start = 0;
     	
     	try {
     		if (line_start > -1) {
